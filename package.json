@@ -1,0 +1,92 @@
+{
+  "name": "tools_trin",
+  "productName": "Tools Trin",
+  "description": "Tools Trin",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js",
+    "debs": "npm install --save --legacy-peer-deps --force",
+    "postinstall": "electron-builder install-app-deps",
+    "linux": "electron-builder --linux --publish always",
+    "win": "electron-builder --win --publish always"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Saintdizen/tools_trin.git"
+  },
+  "keywords": [
+    "Monitoring"
+  ],
+  "build": {
+    "asar": false,
+    "publish": {
+      "provider": "github",
+      "owner": "saintdizen",
+      "private": false,
+      "repo": "tools_trin",
+      "releaseType": "release"
+    },
+    "artifactName": "${name}-${os}-${arch}-${version}.${ext}",
+    "appId": "com.monitoring.createtelegramchat",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage"
+        }
+      ],
+      "category": "test",
+      "desktop": {
+        "Name": "Tools Trin",
+        "Terminal": "false"
+      }
+    },
+    "win": {
+      "icon": "resources/icons/app/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "deleteAppDataOnUninstall": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerHeaderIcon": "resources/icons/app/icon.ico",
+      "installerIcon": "resources/icons/app/icon.ico"
+    },
+    "directories": {
+      "buildResources": "resources",
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "resources/**/*",
+      "app/**/*"
+    ]
+  },
+  "author": {
+    "name": "Chuvakhin Ivan",
+    "email": "saintdizen@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Saintdizen/tools_trin/issues"
+  },
+  "homepage": "https://github.com/Saintdizen/tools_trin#readme",
+  "devDependencies": {
+    "electron-builder": "~24.6.4"
+  },
+  "dependencies": {
+    "chuijs": "~3.3.0",
+    "googleapis": "~133.0.0",
+    "qrcode": "~1.5.3",
+    "telegram": "~2.22.2",
+    "transliteration": "~2.3.5"
+  }
+}
