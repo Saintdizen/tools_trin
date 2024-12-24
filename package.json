@@ -16,7 +16,7 @@
     "url": "https://github.com/Saintdizen/tools_trin.git"
   },
   "keywords": [
-    "Monitoring"
+    "Tools"
   ],
   "build": {
     "asar": false,
@@ -28,7 +28,7 @@
       "releaseType": "release"
     },
     "artifactName": "${name}-${os}-${arch}-${version}.${ext}",
-    "appId": "com.monitoring.createtelegramchat",
+    "appId": "com.toolstrin",
     "linux": {
       "target": [
         {
