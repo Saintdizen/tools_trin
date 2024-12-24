@@ -136,21 +136,17 @@ class TelegramSrc {
 
     async authQrCode(password) {
         if (!await this.#client.checkAuthorization()) {
-            await this.#client.signInUserWithQrCode({apiId: this.#client.apiId, apiHash: this.#client.apiHash},
-                {
-                    onError: async (e) => {
-                        await this.#sendAuthStatus('error', false, `${e}`);
-                        return true;
-                    },
-                    qrCode: async (code) => {
-                        let qr = `tg://login?token=${code.token.toString("base64")}`;
-                        this.#mainApp.getWindow().webContents.send("generatedTokenForQRCode", qr)
-                    },
-                    password: async () => {
-                        return password;
-                    }
+            await this.#client.signInUserWithQrCode({apiId: this.#client.apiId, apiHash: this.#client.apiHash}, {
+                onError: async (e) => {
+                    await this.#sendAuthStatus('error', false, `${e}`);
+                    return true;
+                }, qrCode: async (code) => {
+                    let qr = `tg://login?token=${code.token.toString("base64")}`;
+                    this.#mainApp.getWindow().webContents.send("generatedTokenForQRCode", qr)
+                }, password: async () => {
+                    return password;
                 }
-            ).then(async (user) => {
+            }).then(async (user) => {
                 await this.#sendUserData(user)
                 await this.#sendAuthStatus(true);
                 await this.#sendLog('success', "Авторизация", `${user.firstName} ${user.lastName}`);
@@ -195,8 +191,11 @@ class TelegramSrc {
     }
 
     async createChat(userList, report = {
-        date: undefined, incId: undefined, pinMessage: undefined, description: undefined,
-        wiki: { space: undefined, pageId: undefined }
+        date: undefined,
+        incId: undefined,
+        pinMessage: undefined,
+        description: undefined,
+        wiki: {space: undefined, pageId: undefined}
     }) {
         try {
             //Создать группу
@@ -207,25 +206,16 @@ class TelegramSrc {
             let test_t = `‼ ${this.#test_title}`
             let test_a = `Создан чат по проблеме ${this.#test_title}`
             const res_cr_chat = await this.#client.invoke(new Api.channels.CreateChannel({
-                megagroup: true,
-                title: String(test_t),
-                about: String(test_a),
+                megagroup: true, title: String(test_t), about: String(test_a),
             }));
             this.#chat_id = res_cr_chat.updates[2].channelId.value;
 
             //Изменение разрешений группы
-            await this.#client.invoke(
-                new Api.messages.EditChatDefaultBannedRights({
-                    peer: this.#chat_id,
-                    bannedRights: new Api.ChatBannedRights({
-                        until_date: 0,
-                        view_messages: true,
-                        change_info: true,
-                        invite_users: true,
-                        pin_messages: true,
-                    }),
-                })
-            );
+            await this.#client.invoke(new Api.messages.EditChatDefaultBannedRights({
+                peer: this.#chat_id, bannedRights: new Api.ChatBannedRights({
+                    until_date: 0, view_messages: true, change_info: true, invite_users: true, pin_messages: true,
+                }),
+            }));
 
             //Получение ссылки на приглашение в чат
             await this.#setProgressText('Получение ссылки на приглашение в чат...')
@@ -262,9 +252,7 @@ class TelegramSrc {
             await this.#setProgressValue(70)
             try {
                 await this.#client.sendMessage(this.#chat_id, {
-                    message: new_message,
-                    parseMode: 'html',
-                    linkPreview: false
+                    message: new_message, parseMode: 'html', linkPreview: false
                 }).then(async (e) => {
                     await this.#client.pinMessage(this.#chat_id, e.id, {notify: false})
                 })
@@ -286,29 +274,23 @@ class TelegramSrc {
             for (let user of Array.from(new Set(userList))) {
                 try {
                     await this.#client.invoke(new Api.channels.InviteToChannel({
-                        channel: this.#chat_id,
-                        users: [`${user}`],
+                        channel: this.#chat_id, users: [`${user}`],
                     }))
-                    await this.#client.invoke(
-                        new Api.channels.EditAdmin({
-                            channel: this.#chat_id,
-                            userId: user,
-                            adminRights: new Api.ChatAdminRights({
-                                changeInfo: true,
-                                postMessages: true,
-                                editMessages: true,
-                                deleteMessages: true,
-                                banUsers: true,
-                                inviteUsers: true,
-                                pinMessages: true,
-                                addAdmins: true,
-                                anonymous: false,
-                                manageCall: true,
-                                other: true,
-                            }),
-                            rank: "Администратор",
-                        })
-                    );
+                    await this.#client.invoke(new Api.channels.EditAdmin({
+                        channel: this.#chat_id, userId: user, adminRights: new Api.ChatAdminRights({
+                            changeInfo: true,
+                            postMessages: true,
+                            editMessages: true,
+                            deleteMessages: true,
+                            banUsers: true,
+                            inviteUsers: true,
+                            pinMessages: true,
+                            addAdmins: true,
+                            anonymous: false,
+                            manageCall: true,
+                            other: true,
+                        }), rank: "Администратор",
+                    }));
                 } catch (e) {
                     if (e.message.includes("A wait of ")) {
                         await this.#setProgressLogText(e.message)
@@ -346,7 +328,7 @@ class TelegramSrc {
         // Взятие шаблона
         let link_template = `${protocol}${username}:${password}@${domain_wiki}/rest/api/content/55678859?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
-            request.get({ url: link_template }, async (err, httpResponse, body) => {
+            request.get({url: link_template}, async (err, httpResponse, body) => {
                 if (err) reject(reject);
                 resolve(body)
             });
@@ -357,8 +339,8 @@ class TelegramSrc {
         const data = {
             "type": "page",
             "title": `${date} - ${incId}`,
-            "ancestors": [{ "id": wiki.pageId }],
-            "space": { "key": wiki.space },
+            "ancestors": [{"id": wiki.pageId}],
+            "space": {"key": wiki.space},
             "body": JSON.parse(template).body
         }
 
@@ -383,24 +365,23 @@ class TelegramSrc {
         const data = {
             "fields": {
                 //"project": { "key": "DEMO" },
-                "project": { "key": "INV" },
+                "project": {"key": "INV"},
                 "labels": store.get(SettingsStoreMarks.SETTINGS.atlassian.jira.create_task.labels),
-                "priority": { "name": "Highest" },
-                "assignee":{ "name": username },
+                "priority": {"name": "Highest"},
+                "assignee": {"name": username},
                 "summary": this.#test_title,
-                "description": `Ссылка на отчет: ${this.#report_link}`,
-                //"issuetype": { "name": "Задача" }
-                "issuetype": { "name": "Task" },
-                "customfield_16003" : { "value": "Другое" }
+                "description": `Ссылка на отчет: ${this.#report_link}`, //"issuetype": { "name": "Задача" }
+                "issuetype": {"name": "Task"},
+                "customfield_16003": {"value": "Другое"}
             }
         }
-        request.post({ url: link, body: JSON.stringify(data), headers: {"Content-Type":"application/json"} }, async (err, httpResponse, body) => {
+        request.post({
+            url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json"}
+        }, async (err, httpResponse, body) => {
             if (err) return Log.error('Error:', err);
             let issueKey = JSON.parse(body).key;
             await this.#client.sendMessage(this.#chat_id, {
-                message: `${domain}/browse/${issueKey}`,
-                parseMode: "html",
-                linkPreview: false
+                message: `${domain}/browse/${issueKey}`, parseMode: "html", linkPreview: false
             })
         });
     }
