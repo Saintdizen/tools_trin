@@ -320,13 +320,12 @@ class TelegramSrc {
     // Создание отчета
     async createWikiReport(wiki = {space: undefined, pageId: undefined}, date = undefined, incId = undefined) {
         let domain = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.domain), "base64").toString("utf-8")
-        let domain_wiki = domain.replace("http://", "").replace("https://", "")
-        let protocol = domain.replace(domain_wiki, "")
         let username = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.username), "base64").toString("utf-8")
         let password = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.password), "base64").toString("utf-8")
+        let auth = "Basic " + new Buffer(username + ":" + password).toString("base64");
         // https://wiki.mos-team.ru/
         // Взятие шаблона
-        let link_template = `${protocol}${username}:${password}@${domain_wiki}/rest/api/content/55678859?expand=body.storage`
+        let link_template = `${domain}/rest/api/content/55678859?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
             request.get({url: link_template}, async (err, httpResponse, body) => {
                 if (err) reject(reject);
@@ -335,7 +334,7 @@ class TelegramSrc {
         });
 
         // Создание страницы
-        let link = `${protocol}${username}:${password}@${domain_wiki}/rest/api/content/`
+        let link = `${domain}/rest/api/content/`
         const data = {
             "type": "page",
             "title": `${date} - ${incId}`,
@@ -346,7 +345,7 @@ class TelegramSrc {
 
         return new Promise((resolve, reject) => {
             request.post({
-                url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json"}
+                url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
             }, async (err, httpResponse, body) => {
                 if (err) reject(reject);
                 resolve(body)
