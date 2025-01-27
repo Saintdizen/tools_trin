@@ -357,11 +357,10 @@ class TelegramSrc {
     // Создание задачи
     async createJiraIssue() {
         let domain = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.jira.domain), "base64").toString("utf-8")
-        let domain_jira = domain.replace("http://", "").replace("https://", "")
-        let protocol = domain.replace(domain_jira, "")
         let username = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.username), "base64").toString("utf-8")
         let password = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.password), "base64").toString("utf-8")
-        let link = `${protocol}${username}:${password}@${domain_jira}/rest/api/2/issue/`
+        let auth = "Basic " + new Buffer(username + ":" + password).toString("base64");
+        let link = `${domain}/rest/api/2/issue/`
         const data = {
             "fields": {
                 //"project": { "key": "DEMO" },
@@ -376,9 +375,12 @@ class TelegramSrc {
             }
         }
         request.post({
-            url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json"}
+            url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
         }, async (err, httpResponse, body) => {
-            if (err) return Log.error('Error:', err);
+            if (err) {
+                Log.error('Error:', err);
+                console.log(err)
+            }
             let issueKey = JSON.parse(body).key;
             await this.#client.sendMessage(this.#chat_id, {
                 message: `${domain}/browse/${issueKey}`, parseMode: "html", linkPreview: false
