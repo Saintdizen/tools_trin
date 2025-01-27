@@ -327,8 +327,10 @@ class TelegramSrc {
         // Взятие шаблона
         let link_template = `${domain}/rest/api/content/55678859?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
-            request.get({url: link_template}, async (err, httpResponse, body) => {
-                if (err) reject(reject);
+            request.get({url: link_template, headers: {"Authorization": auth}}, async (err, httpResponse, body) => {
+                if (err) {
+                    reject(reject);
+                }
                 resolve(body)
             });
         });
@@ -347,7 +349,9 @@ class TelegramSrc {
             request.post({
                 url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
             }, async (err, httpResponse, body) => {
-                if (err) reject(reject);
+                if (err) {
+                    reject(reject);
+                }
                 resolve(body)
             });
         });
