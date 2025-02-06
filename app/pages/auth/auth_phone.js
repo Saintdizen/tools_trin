@@ -49,7 +49,7 @@ class AuthPhone extends Page {
 
     constructor(back, mainPage) {
         super();
-        this.setTitle('Авторизация по номеру телефона');
+        this.setTitle('Tools Trin: Авторизация по номеру телефона');
         this.setMain(false);
         this.setFullHeight()
         this.setFullWidth()

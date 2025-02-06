@@ -14,7 +14,7 @@ class AuthMain extends Page {
 
     constructor(mainPage) {
         super();
-        this.setTitle('Авторизация');
+        this.setTitle('Tools Trin: Авторизация');
         this.setMain(true);
         this.setFullHeight()
         this.setFullWidth()

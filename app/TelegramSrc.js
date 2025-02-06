@@ -271,35 +271,10 @@ class TelegramSrc {
             //Добавить людей
             await this.#setProgressText('Добавление пользователей в чат...')
             await this.#setProgressValue(85)
-            for (let user of Array.from(new Set(userList))) {
-                try {
-                    await this.#client.invoke(new Api.channels.InviteToChannel({
-                        channel: this.#chat_id, users: [`${user}`],
-                    }))
-                    await this.#client.invoke(new Api.channels.EditAdmin({
-                        channel: this.#chat_id, userId: user, adminRights: new Api.ChatAdminRights({
-                            changeInfo: true,
-                            postMessages: true,
-                            editMessages: true,
-                            deleteMessages: true,
-                            banUsers: true,
-                            inviteUsers: true,
-                            pinMessages: true,
-                            addAdmins: true,
-                            anonymous: false,
-                            manageCall: true,
-                            other: true,
-                        }), rank: "Администратор",
-                    }));
-                } catch (e) {
-                    if (e.message.includes("A wait of ")) {
-                        await this.#setProgressLogText(e.message)
-                        break
-                    } else {
-                        await this.#setProgressLogText(`Пользователь с ником ${user} не найден`)
-                    }
-                }
-            }
+
+            await this.addUsersToChat(userList.main_users)
+            await this.addUsersToChat(userList.production_users)
+
             await this.#setProgressText('Чат успешно создан!')
             await this.#setProgressValue(100)
             await this.#closeDialog()
@@ -314,6 +289,38 @@ class TelegramSrc {
             await this.#closeDialog();
             await this.#sendLog('error', `Создание чата`, `${e}`);
             await Log.error(e);
+        }
+    }
+
+    async addUsersToChat(list = []) {
+        for (let user of Array.from(new Set(list))) {
+            try {
+                await this.#client.invoke(new Api.channels.InviteToChannel({
+                    channel: this.#chat_id, users: [`${user}`],
+                }))
+                await this.#client.invoke(new Api.channels.EditAdmin({
+                    channel: this.#chat_id, userId: user, adminRights: new Api.ChatAdminRights({
+                        changeInfo: true,
+                        postMessages: true,
+                        editMessages: true,
+                        deleteMessages: true,
+                        banUsers: true,
+                        inviteUsers: true,
+                        pinMessages: true,
+                        addAdmins: true,
+                        anonymous: false,
+                        manageCall: true,
+                        other: true,
+                    }), rank: "Администратор",
+                }));
+            } catch (e) {
+                if (e.message.includes("A wait of ")) {
+                    await this.#setProgressLogText(e.message)
+                    break
+                } else {
+                    await this.#setProgressLogText(`Пользователь с ником ${user} не найден`)
+                }
+            }
         }
     }
 

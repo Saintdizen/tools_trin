@@ -22,7 +22,8 @@ class SettingsStoreMarks {
             json_key_path: "settings.google.json_key_path",
             tables: {
                 users_groups_id: "settings.google.tables.users_groups_id",
-                auth_settings_id: "settings.google.tables.auth_settings_id"
+                auth_settings_id: "settings.google.tables.auth_settings_id",
+                services_and_production: "settings.google.tables.services_and_production"
             }
         }
     }

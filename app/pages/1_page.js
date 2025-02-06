@@ -1,21 +1,26 @@
 const {
     Page, Button, TextInput, ContentBlock,
     Styles, Notification, ipcRenderer, Dialog,
-    ProgressBar, Label, RadioGroup, Spinner,
-    TextEditor, MenuBar, Icons, Log, Popup
+    ProgressBar, Label, Spinner,
+    TextEditor, MenuBar, Icons, Log, Popup, ComboBox
 } = require('chuijs');
 const {CreateHelpDialog} = require("../src/dialogs/dialogs");
 const {Tables} = require('../src/google_sheets/tables');
 let tableUsersGroups = new Tables().tableUsersGroups();
 let tableAuthSettings = new Tables().tableAuthSettings();
+let tableServicesAndProduction = new Tables().tableServicesAndProduction();
 
-let lists = [];
+let list_users = {
+    main_users: [],
+    production_users: []
+};
 let report = {
     date: String(undefined),
     incId: String(undefined),
     pinMessage: String(undefined),
     description: String(undefined),
     is: String(undefined),
+    service: String(undefined),
     wiki: {
         space: String(undefined),
         pageId: Number(undefined)
@@ -30,7 +35,7 @@ class CreateChatTG extends Page {
     constructor() {
         super();
         // Настройки страницы
-        this.setTitle('Создание чата в Telegram');
+        this.setTitle('Tools Trin: Создание чата в Telegram');
         this.setMain(true);
         this.setFullWidth();
         this.setFullHeight();
@@ -47,18 +52,18 @@ class CreateChatTG extends Page {
         let block = new ContentBlock({
             direction: Styles.DIRECTION.COLUMN,
             wrap: Styles.WRAP.WRAP,
-            align: Styles.ALIGN.BASELINE,
+            align: Styles.ALIGN.CENTER,
             justify: Styles.JUSTIFY.START
         });
         block.setWidth("-webkit-fill-available")
         //
-        let block_radios = new ContentBlock({
+        let main_block_1 = new ContentBlock({
             direction: Styles.DIRECTION.ROW,
             wrap: Styles.WRAP.WRAP,
             align: Styles.ALIGN.CENTER,
             justify: Styles.JUSTIFY.CENTER
         });
-        block_radios.setWidth(Styles.SIZE.WEBKIT_FILL);
+        main_block_1.setWidth(Styles.SIZE.WEBKIT_FILL);
         //
         let progressBlock = new ContentBlock({
             direction: Styles.DIRECTION.COLUMN,
@@ -80,16 +85,25 @@ class CreateChatTG extends Page {
         //
         let spinner = new Spinner(Spinner.SIZE.SMALL, '8px auto');
         //
-        let radioGroup = new RadioGroup({
-            styles: {
-                direction: Styles.DIRECTION.ROW,
-                wrap: Styles.WRAP.WRAP,
-                align: Styles.ALIGN.CENTER,
-                justify: Styles.JUSTIFY.CENTER,
-                width: Styles.SIZE.WEBKIT_FILL
-            }
-        });
-        let radio_groups = [];
+        let comboBox_services_Options = []
+        let comboBox_services = new ComboBox({
+            name: "Сервисы",
+            title: "Сервисы",
+            placeholder: "Сервисы",
+            width: Styles.SIZE.WEBKIT_FILL,
+            transparentBack: false,
+            optionsLen: 5
+        })
+        comboBox_services.setDisabled(true)
+        let comboBox_is_Options = []
+        let comboBox_is = new ComboBox({
+            name: "ИС",
+            title: "ИС",
+            placeholder: "ИС",
+            width: Styles.SIZE.WEBKIT_FILL,
+            transparentBack: false,
+            optionsLen: 5
+        })
         // Номер инцидента
         let inc_num = new TextInput({
             title: 'Номер инцидента',
@@ -158,10 +172,15 @@ class CreateChatTG extends Page {
             title: "Очистить",
             clickEvent: async () => {
                 //
-                radioGroup.clear()
+                list_users.main_users = []
+                list_users.production_users = []
+                comboBox_services.clear()
+                comboBox_services.setDisabled(true)
+                comboBox_is.clear()
                 report.wiki.space = undefined
                 report.wiki.pageId = undefined
                 report.is = undefined
+                report.service = undefined
                 //
                 inc_num.setValue('IM')
                 //
@@ -181,6 +200,8 @@ class CreateChatTG extends Page {
                     style: Notification.STYLE.SUCCESS, showTime: 3000
                 }).show()
                 button_c_clear.setDisabled(true)
+                console.log(report)
+                console.log(list_users)
             }
         })
         button_c_clear.setDisabled(true)
@@ -194,19 +215,20 @@ class CreateChatTG extends Page {
                     okText: 'OK', cancelText: 'Отмена',
                 })
                 if (confirm_res) {
-                    if (lists.length !== 0) {
+                    if (list_users.length !== 0) {
                         modal.open()
                         progressBar.setProgressText('Получение данных...')
                         report.date = CreateChatTG.#format(new Date());
                         report.incId = inc_num.getValue();
                         report.pinMessage = pin_message.getValueAsHTML();
                         report.description = desc.getValue();
-                        report.is = radioGroup.getValue()
+                        report.is = comboBox_is.getValue();
+                        report.service = comboBox_services.getValue()
                         try {
                             ipcRenderer.on('setProgressValue', (e, value) => progressBar.setValue(value))
                             ipcRenderer.on('setProgressText', (e, text) => progressBar.setProgressText(text))
                             ipcRenderer.on('setProgressLogText', (e, text) => progressBlock.add(new Label(text)))
-                            ipcRenderer.send('tg_crt_chat', lists, report)
+                            ipcRenderer.send('tg_crt_chat', list_users, report)
                         } catch (e) {
                             Log.error(e)
                             progressBlock.add(new Label(e))
@@ -237,7 +259,7 @@ class CreateChatTG extends Page {
         progressBlock.add(progressBar)
         modal.addToBody(progressBlock)
         block.add(modal)
-        block_radios.add(spinner)
+        main_block_1.add(spinner)
         //
 
         ipcRenderer.on("sendNotification", (e, text, body) => {
@@ -248,40 +270,67 @@ class CreateChatTG extends Page {
         })
 
         ipcRenderer.on('user_data', async (e, TAG_TG, ROLE, GROUP) => {
-            let rp_names = await tableUsersGroups.getLists().catch(err => Log.info(err));
-            for (let list of rp_names.data.sheets) {
-                if (list.properties.title.includes("Тестер") || list.properties.title.includes("Общая проблема")) {
-                    radio_groups.push({name: list.properties.title, value: list.properties.title});
-                } else {
-                    if (list.properties.title.includes(GROUP)) {
-                        radio_groups.push({name: list.properties.title, value: list.properties.title})
-                    } else if (GROUP.includes("*")) {
-                        radio_groups.push({name: list.properties.title, value: list.properties.title})
-                    }
+            let test = await tableServicesAndProduction.read("SERVICES!A1:B").catch(err => Log.info(err));
+            let people = undefined
+            for (let tt of test) {
+                if (!tt[0].includes("---")) {
+                    if (tt[1] !== undefined) people = tt[1]
+                    comboBox_services_Options.push({title: tt[0], value: people})
                 }
             }
-            radioGroup.addOptions(radio_groups)
-            radioGroup.addChangeListener(async (e) => {
+            comboBox_services.addOptions(...comboBox_services_Options)
+            //
+            comboBox_services.addValueChangeListener((e) => {
+                list_users.production_users = e.detail.value.split("\n")
+                console.log(list_users)
+
+
+                new Notification({
+                    title: 'Список пользователей', text: "Дополнен",
+                    style: Notification.STYLE.SUCCESS, showTime: 3000
+                }).show()
+            })
+            //
+            let rp_names = await tableUsersGroups.getLists().catch(err => Log.info(err));
+            for (let list of rp_names.data.sheets) {
+                comboBox_is_Options.push({title: list.properties.title, value: list.properties.title});
+            }
+            comboBox_is.addOptions(...comboBox_is_Options)
+            comboBox_is.addValueChangeListener(async (e) => {
+                if (e.detail.title.includes("ОПМПМ Первый") || e.detail.title.includes("ОПМПМ Второй") || e.detail.title.includes("Тестовая ИС")) {
+                    comboBox_services.clear()
+                    comboBox_services.setDisabled(false)
+                } else {
+                    list_users.production_users = []
+                    comboBox_services.clear()
+                    comboBox_services.setDisabled(true)
+                }
                 try {
                     button_c_chat.setDisabled(true);
                     button_c_clear.setDisabled(true);
                     // Чтение таблиц
                     let report_list = await tableAuthSettings.read(`REPORTS!A1:D`);
-                    let users_list = await tableUsersGroups.read(`${e.target.value}!A1:A`).catch(err => Log.error(err));
-                    lists = []
-                    users_list.forEach(val => {
-                        if (val.length !== 0) lists.push(val[0]);
+                    let goog_users_list = await tableUsersGroups.read(`${e.detail.title}!A1:A`).catch(err => Log.error(err));
+                    // Тут добавляются продакты, если они выбраны...
+                    //let production_list = await tableServicesAndProduction.read(`SERVICES!A1:B`);
+
+                    list_users.main_users = []
+                    goog_users_list.forEach(val => {
+                        if (val.length !== 0) list_users.main_users.push(val[0]);
                     })
                     report_list.filter(val => {
-                        if (e.target.value.includes(val[1])) {
+                        if (e.detail.title.includes(val[1])) {
                             report.wiki.space = val[2]
                             report.wiki.pageId = val[3]
                         }
                     })
+
+                    console.log(list_users)
                     new Notification({
                         title: 'Список пользователей', text: "Обновлен",
                         style: Notification.STYLE.SUCCESS, showTime: 3000
                     }).show()
+                    console.log(report)
                     button_c_chat.setDisabled(false);
                     button_c_clear.setDisabled(false);
                 } catch (e) {
@@ -292,12 +341,12 @@ class CreateChatTG extends Page {
                     }).show();
                 }
             })
-            block_radios.clear()
-            block_radios.add(radioGroup)
+            main_block_1.clear()
+            main_block_1.add(comboBox_is, comboBox_services)
         })
         modal.addToFooter(button_close)
         //Добавление компонентов на форму
-        block.add(block_radios, inc_num, desc, pin_message) //, button_c_chat)
+        block.add(main_block_1, inc_num, desc, pin_message) //, button_c_chat)
         return block;
     }
 

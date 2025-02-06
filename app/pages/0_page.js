@@ -21,7 +21,7 @@ class SettingsGoogleCheckPage extends Page {
         this.#p1 = MainPage;
         this.#main_block.setWidth(Styles.SIZE.WEBKIT_FILL);
         this.#main_block.setHeight(Styles.SIZE.WEBKIT_FILL);
-        this.setTitle('Создание чата в Telegram');
+        this.setTitle('Tools Trin: Настройка и авторизация');
         this.setMain(true);
         this.setFullWidth();
         this.setFullHeight();
@@ -30,15 +30,17 @@ class SettingsGoogleCheckPage extends Page {
         let key = store.get(SettingsStoreMarks.SETTINGS.google.json_key_path) === undefined;
         let t1 = store.get(SettingsStoreMarks.SETTINGS.google.tables.users_groups_id) === undefined;
         let t2 = store.get(SettingsStoreMarks.SETTINGS.google.tables.auth_settings_id) === undefined;
+        let t3 = store.get(SettingsStoreMarks.SETTINGS.google.tables.services_and_production) === undefined;
         this.#b1 = this.step1Block();
         this.#b2 = this.step2Block();
-        if (key && t1 && t2) {
+        if (key && t1 && t2 && t3) {
             this.#main_block.add(this.#b1);
         } else {
             setTimeout(async () => {
                 let status_1 = await this.checkTable(new Tables().tableUsersGroups());
                 let status_2 = await this.checkTable(new Tables().tableAuthSettings());
-                if (status_1.status && status_2.status) await this.checkAuth();
+                let status_3 = await this.checkTable(new Tables().tableServicesAndProduction());
+                if (status_1.status && status_2.status && status_3.status) await this.checkAuth();
             }, 200);
         }
     }
@@ -76,21 +78,24 @@ class SettingsGoogleCheckPage extends Page {
         });
         let label1 = new Label({markdownText: "Установите ключи для доступа к таблицам"});
         block2.add(label1);
-        let i1 = new TextInput({title: 'Идентификатор таблицы: "Группы пользователей"', placeholder: 'Номер инцидента', width: '400px'});
-        let i2 = new TextInput({title: 'Идентификатор таблицы: "Настройки авторизации"', placeholder: 'Номер инцидента', width: '400px'});
-        block2.add(i1, i2);
+        let i1 = new TextInput({title: 'Идентификатор таблицы: "Группы пользователей"', placeholder: 'Группы пользователей', width: '400px'});
+        let i2 = new TextInput({title: 'Идентификатор таблицы: "Настройки авторизации"', placeholder: 'Настройки авторизации', width: '400px'});
+        let i3 = new TextInput({title: 'Идентификатор таблицы: "Сервисы и продакты"', placeholder: 'Сервисы и продакты', width: '400px'});
+        block2.add(i1, i2, i3);
         let b_save = new Button({title: "Сохранить"});
         b_save.addClickListener(async () => {
-            if (fs.existsSync(this.#path_key) && i1.getValue() !== "" && i2.getValue() !== "") {
+            if (fs.existsSync(this.#path_key) && i1.getValue() !== "" && i2.getValue() !== "" && i3.getValue() !== "") {
                 store.set(SettingsStoreMarks.SETTINGS.google.json_key_path, this.#path_key);
                 store.set(SettingsStoreMarks.SETTINGS.google.tables.users_groups_id, i1.getValue());
                 store.set(SettingsStoreMarks.SETTINGS.google.tables.auth_settings_id, i2.getValue());
+                store.set(SettingsStoreMarks.SETTINGS.google.tables.services_and_production, i3.getValue());
                 let apps = App.get();
                 apps.relaunch()
                 apps.exit(0)
             }
             if (i1.getValue() === "") i1.setErrorMessage("Устанвите идентификатор таблицы");
             if (i2.getValue() === "") i2.setErrorMessage("Устанвите идентификатор таблицы");
+            if (i3.getValue() === "") i3.setErrorMessage("Устанвите идентификатор таблицы");
         })
         block2.add(b_save);
         return block2;

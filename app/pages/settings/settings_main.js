@@ -24,7 +24,7 @@ class SettingsMain extends Page {
     #menuBar = new MenuBar({test: true});
     constructor(page) {
         super();
-        this.setTitle('Настройки');
+        this.setTitle('Tools Trin: Настройки');
         this.setMain(false);
         this.setMenuBar(this.#menuBar)
         this.#back_page = page;

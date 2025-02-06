@@ -31,7 +31,7 @@ class AuthQRCode extends Page {
 
     constructor(back, mainPage) {
         super();
-        this.setTitle('Авторизация по QR коду');
+        this.setTitle('Tools Trin: Авторизация по QR коду');
         this.setMain(false);
         this.setFullHeight();
         this.setFullWidth();
