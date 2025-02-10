@@ -5,6 +5,7 @@ const {StringSession} = require("telegram/sessions");
 const json = require("../package.json");
 const {SettingsStoreMarks} = require("./settings/settings_store_marks");
 const {Tables} = require('./src/google_sheets/tables');
+const {long, int} = require("telegram/tl/api");
 let tableAuthSettings = new Tables().tableAuthSettings();
 
 class TelegramSrc {
@@ -271,9 +272,17 @@ class TelegramSrc {
             //Добавить людей
             await this.#setProgressText('Добавление пользователей в чат...')
             await this.#setProgressValue(85)
+            let all_users = []
+            const main_users = await this.addUsersToChat(userList.main_users, new_message)
+            const production_users = await this.addUsersToChat(userList.production_users, new_message)
+            all_users.push(...main_users)
+            all_users.push(...production_users)
 
-            await this.addUsersToChat(userList.main_users)
-            await this.addUsersToChat(userList.production_users)
+            if (all_users.length > 0) {
+                await this.#client.sendMessage(this.#chat_id, {
+                    message: `Люди не добавленные в чат:\n${all_users.join("\n")}\nИм отправлено личное сообщение.`, parseMode: 'html', linkPreview: false
+                })
+            }
 
             await this.#setProgressText('Чат успешно создан!')
             await this.#setProgressValue(100)
@@ -292,7 +301,8 @@ class TelegramSrc {
         }
     }
 
-    async addUsersToChat(list = []) {
+    async addUsersToChat(list = [], message) {
+        let notInvited = []
         for (let user of Array.from(new Set(list))) {
             try {
                 await this.#client.invoke(new Api.channels.InviteToChannel({
@@ -314,6 +324,12 @@ class TelegramSrc {
                     }), rank: "Администратор",
                 }));
             } catch (e) {
+                if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
+                    notInvited.push(user)
+                    await this.#client.sendMessage(user, {
+                        message: message, parseMode: 'html', linkPreview: true
+                    })
+                }
                 if (e.message.includes("A wait of ")) {
                     await this.#setProgressLogText(e.message)
                     break
@@ -322,6 +338,7 @@ class TelegramSrc {
                 }
             }
         }
+        return notInvited
     }
 
     // Создание отчета
