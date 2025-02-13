@@ -273,7 +273,7 @@ class CreateChatTG extends Page {
             let test = await tableServicesAndProduction.read("SERVICES!A1:B").catch(err => Log.info(err));
             let people = undefined
             for (let tt of test) {
-                if (!tt[0].includes("---")) {
+                if (!String(tt[0]).includes("---")) {
                     if (tt[1] !== undefined) people = tt[1]
                     comboBox_services_Options.push({title: tt[0], value: people})
                 }
