@@ -18,7 +18,7 @@ class TelegramSrc {
     #stringSession = new StringSession("");
     #test_title = undefined;
     #chat_id = undefined;
-    #report_link = "";
+    #report_link = [];
 
     constructor(mainApp) {
         this.#mainApp = mainApp;
@@ -196,13 +196,17 @@ class TelegramSrc {
         incId: undefined,
         pinMessage: undefined,
         description: undefined,
-        wiki: {space: undefined, pageId: undefined}
+        wiki: []
     }) {
         try {
             //Создать группу
             await this.#setProgressText('Создание группы...')
             await this.#setProgressValue(25)
-            let is_name = report.is.replace(/[(){}\]\[\d]+/gm, "").toString().trim()
+            //
+            let is_names = []
+            report.is.forEach(name => is_names.push(name.title))
+            //
+            let is_name = is_names.join(", ").replace(/[(){}\]\[\d]+/gm, "").toString().trim()
             this.#test_title = this.format(new Date()) + " - " + is_name + " - " + report.description + " - " + report.incId
             let test_t = `‼ ${this.#test_title}`
             let test_a = `Создан чат по проблеме ${this.#test_title}`
@@ -226,25 +230,36 @@ class TelegramSrc {
             }));
             let tg_link = invite_link.link;
 
-            let Test_link = "";
+            let test_test = []
+            this.#report_link = []
             // Проверка активации настройки
             if (store.get(SettingsStoreMarks.SETTINGS.atlassian.status)) {
                 // Создание отчета
                 if (store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.create_report.status)) {
                     await this.#setProgressText('Создание отчета...')
                     await this.#setProgressValue(50)
-                    let req = await this.createWikiReport(report.wiki, report.date, report.incId);
-                    let body_json = JSON.parse(req)
-                    Test_link = `https://wiki.mos-team.ru/pages/viewpage.action?pageId=${body_json.id}`
+                    if (report.wiki.length === 1) {
+                        for (const space of report.wiki) {
+                            let req = await this.createWikiReport(space, report.date, report.incId);
+                            test_test.push(`<b><a href="${req.link}">Ссылка</a></b> на отчет по инциденту`)
+                            this.#report_link.push(req.link)
+                        }
+                    } else {
+                        for (const space of report.wiki) {
+                            let req = await this.createWikiReport(space, report.date, report.incId);
+                            test_test.push(`${req.is} - <b><a href="${req.link}">Ссылка</a></b> на отчет по инциденту`)
+                            this.#report_link.push(`${req.is} - ${req.link}`)
+                        }
+                    }
                 }
             }
-            this.#report_link = Test_link
+
 
             //Корректировка сообщения
             await this.#setProgressText('Корректировка сообщения...')
             await this.#setProgressValue(55)
             let message = report.pinMessage.toString().replaceAll("<p>", "").replaceAll("</p>", "").split('\n');
-            message[1] = `<b><a href="${Test_link}">Ссылка</a></b>  на отчет по инциденту`
+            message[1] = test_test.join("\n")
             message.push(`\n<b>Приглашение в оперативный чат:</b> ${tg_link}`)
             const new_message = message.join('\n')
 
@@ -302,39 +317,43 @@ class TelegramSrc {
     }
 
     async addUsersToChat(list = [], message) {
+        console.log(list)
         let notInvited = []
-        for (let user of Array.from(new Set(list))) {
-            try {
-                await this.#client.invoke(new Api.channels.InviteToChannel({
-                    channel: this.#chat_id, users: [`${user}`],
-                }))
-                await this.#client.invoke(new Api.channels.EditAdmin({
-                    channel: this.#chat_id, userId: user, adminRights: new Api.ChatAdminRights({
-                        changeInfo: true,
-                        postMessages: true,
-                        editMessages: true,
-                        deleteMessages: true,
-                        banUsers: true,
-                        inviteUsers: true,
-                        pinMessages: true,
-                        addAdmins: true,
-                        anonymous: false,
-                        manageCall: true,
-                        other: true,
-                    }), rank: "Администратор",
-                }));
-            } catch (e) {
-                if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
-                    notInvited.push(user)
-                    await this.#client.sendMessage(user, {
-                        message: message, parseMode: 'html', linkPreview: true
-                    })
-                }
-                if (e.message.includes("A wait of ")) {
-                    await this.#setProgressLogText(e.message)
-                    break
-                } else {
-                    await this.#setProgressLogText(`Пользователь с ником ${user} не найден`)
+
+        for (let users of list) {
+            for (let user of Array.from(new Set(users.users))) {
+                try {
+                    await this.#client.invoke(new Api.channels.InviteToChannel({
+                        channel: this.#chat_id, users: [`${user}`],
+                    }))
+                    await this.#client.invoke(new Api.channels.EditAdmin({
+                        channel: this.#chat_id, userId: user, adminRights: new Api.ChatAdminRights({
+                            changeInfo: true,
+                            postMessages: true,
+                            editMessages: true,
+                            deleteMessages: true,
+                            banUsers: true,
+                            inviteUsers: true,
+                            pinMessages: true,
+                            addAdmins: true,
+                            anonymous: false,
+                            manageCall: true,
+                            other: true,
+                        }), rank: "Администратор",
+                    }));
+                } catch (e) {
+                    if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
+                        notInvited.push(user)
+                        await this.#client.sendMessage(user, {
+                            message: message, parseMode: 'html', linkPreview: true
+                        })
+                    }
+                    if (e.message.includes("A wait of ")) {
+                        await this.#setProgressLogText(e.message)
+                        break
+                    } else {
+                        await this.#setProgressLogText(`Пользователь с ником ${user} не найден`)
+                    }
                 }
             }
         }
@@ -342,7 +361,8 @@ class TelegramSrc {
     }
 
     // Создание отчета
-    async createWikiReport(wiki = {space: undefined, pageId: undefined}, date = undefined, incId = undefined) {
+    async createWikiReport(wiki = undefined, date = undefined, incId = undefined) {
+        console.log(wiki)
         let domain = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.domain), "base64").toString("utf-8")
         let username = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.username), "base64").toString("utf-8")
         let password = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.password), "base64").toString("utf-8")
@@ -352,31 +372,29 @@ class TelegramSrc {
         let link_template = `${domain}/rest/api/content/55678859?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
             request.get({url: link_template, headers: {"Authorization": auth}}, async (err, httpResponse, body) => {
-                if (err) {
-                    reject(reject);
-                }
+                if (err) reject(reject);
                 resolve(body)
             });
         });
-
         // Создание страницы
         let link = `${domain}/rest/api/content/`
         const data = {
             "type": "page",
-            "title": `${date} - ${incId}`,
-            "ancestors": [{"id": wiki.pageId}],
-            "space": {"key": wiki.space},
+            "title": `${date} - ${incId} (${wiki.is})`,
+            "ancestors": [{"id": wiki.spaces.pageId}],
+            "space": {"key": wiki.spaces.space},
             "body": JSON.parse(template).body
         }
-
-        return new Promise((resolve, reject) => {
+        return await new Promise((resolve, reject) => {
             request.post({
                 url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
             }, async (err, httpResponse, body) => {
-                if (err) {
-                    reject(reject);
-                }
-                resolve(body)
+                if (err) reject(reject);
+                console.log(body)
+                resolve({
+                    is: wiki.is,
+                    link: `${domain}/pages/viewpage.action?pageId=${JSON.parse(body).id}`
+                })
             });
         });
     }
@@ -396,7 +414,7 @@ class TelegramSrc {
                 "priority": {"name": "Highest"},
                 "assignee": {"name": username},
                 "summary": this.#test_title,
-                "description": `Ссылка на отчет: ${this.#report_link}`, //"issuetype": { "name": "Задача" }
+                "description": `Ссылка на отчет:\n${this.#report_link.join("\n")}`, //"issuetype": { "name": "Задача" }
                 "issuetype": {"name": "Task"},
                 "customfield_16003": {"value": "Другое"}
             }

@@ -2,7 +2,7 @@ const {
     Page, Button, TextInput, ContentBlock,
     Styles, Notification, ipcRenderer, Dialog,
     ProgressBar, Label, Spinner,
-    TextEditor, MenuBar, Icons, Log, Popup, ComboBox
+    TextEditor, MenuBar, Icons, Log, Popup, ComboBox, MultiComboBox
 } = require('chuijs');
 const {CreateHelpDialog} = require("../src/dialogs/dialogs");
 const {Tables} = require('../src/google_sheets/tables');
@@ -21,10 +21,7 @@ let report = {
     description: String(undefined),
     is: String(undefined),
     service: String(undefined),
-    wiki: {
-        space: String(undefined),
-        pageId: Number(undefined)
-    }
+    wiki: []
 }
 
 //
@@ -96,7 +93,7 @@ class CreateChatTG extends Page {
         })
         comboBox_services.setDisabled(true)
         let comboBox_is_Options = []
-        let comboBox_is = new ComboBox({
+        let comboBox_is = new MultiComboBox({
             name: "ИС",
             title: "ИС",
             placeholder: "ИС",
@@ -177,10 +174,13 @@ class CreateChatTG extends Page {
                 comboBox_services.clear()
                 comboBox_services.setDisabled(true)
                 comboBox_is.clear()
-                report.wiki.space = undefined
-                report.wiki.pageId = undefined
+                report.wiki = []
                 report.is = undefined
                 report.service = undefined
+                report.date = undefined
+                report.incId = undefined
+                report.pinMessage = undefined
+                report.description = undefined
                 //
                 inc_num.setValue('IM')
                 //
@@ -281,10 +281,12 @@ class CreateChatTG extends Page {
             comboBox_services.addOptions(...comboBox_services_Options)
             //
             comboBox_services.addValueChangeListener((e) => {
-                list_users.production_users = e.detail.value.split("\n")
+                list_users.production_users = []
+                list_users.production_users.push({
+                    service: e.detail.title,
+                    users: e.detail.value.split("\n")
+                })
                 console.log(list_users)
-
-
                 new Notification({
                     title: 'Список пользователей', text: "Дополнен",
                     style: Notification.STYLE.SUCCESS, showTime: 3000
@@ -297,7 +299,10 @@ class CreateChatTG extends Page {
             }
             comboBox_is.addOptions(...comboBox_is_Options)
             comboBox_is.addValueChangeListener(async (e) => {
-                if (e.detail.title.includes("ОПМПМ Первый") || e.detail.title.includes("ОПМПМ Второй") || e.detail.title.includes("Тестовая ИС")) {
+                let fil_vals = e.detail.values.filter((val) => {
+                    return val.title.includes("ОПМПМ Первый") || val.title.includes("ОПМПМ Второй") || val.title.includes("Тестовая ИС")
+                })
+                if (fil_vals.length > 0) {
                     comboBox_services.clear()
                     comboBox_services.setDisabled(false)
                 } else {
@@ -310,27 +315,37 @@ class CreateChatTG extends Page {
                     button_c_clear.setDisabled(true);
                     // Чтение таблиц
                     let report_list = await tableAuthSettings.read(`REPORTS!A1:D`);
-                    let goog_users_list = await tableUsersGroups.read(`${e.detail.title}!A1:A`).catch(err => Log.error(err));
-                    // Тут добавляются продакты, если они выбраны...
-                    //let production_list = await tableServicesAndProduction.read(`SERVICES!A1:B`);
+                    let goog_users_list = []
+                    let goog_report_list = []
+                    for (let table of e.detail.values) {
+                        let test = await tableUsersGroups.read(`${table.title}!A1:A`).catch(err => Log.error(err))
+                        let cache = []
+                        test.forEach(user => cache.push(user[0]))
+                        goog_users_list.push({
+                            is: table.title,
+                            users: cache
+                        })
 
-                    list_users.main_users = []
-                    goog_users_list.forEach(val => {
-                        if (val.length !== 0) list_users.main_users.push(val[0]);
-                    })
-                    report_list.filter(val => {
-                        if (e.detail.title.includes(val[1])) {
-                            report.wiki.space = val[2]
-                            report.wiki.pageId = val[3]
-                        }
-                    })
-
-                    console.log(list_users)
+                        report_list.filter(val => {
+                            if (table.title.includes(val[1])) {
+                                goog_report_list.push({
+                                    is: table.title,
+                                    spaces: {
+                                        space: val[2],
+                                        pageId: val[3]
+                                    }
+                                })
+                            }
+                        })
+                    }
+                    report.wiki = goog_report_list
+                    list_users.main_users = goog_users_list
                     new Notification({
                         title: 'Список пользователей', text: "Обновлен",
                         style: Notification.STYLE.SUCCESS, showTime: 3000
                     }).show()
-                    console.log(report)
+                    console.log("USERS: ", list_users)
+                    console.log("REPORT: ", report)
                     button_c_chat.setDisabled(false);
                     button_c_clear.setDisabled(false);
                 } catch (e) {
