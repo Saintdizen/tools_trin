@@ -206,7 +206,7 @@ class TelegramSrc {
             let is_names = []
             report.is.forEach(name => is_names.push(name.title))
             //
-            let is_name = is_names.join(", ").replace(/[(){}\]\[\d]+/gm, "").toString().trim()
+            let is_name = is_names.join(", ") //.replace(/[(){}\]\[\d]+/gm, "").toString().trim()
             this.#test_title = this.format(new Date()) + " - " + is_name + " - " + report.description + " - " + report.incId
             let test_t = `‼ ${this.#test_title}`
             let test_a = `Создан чат по проблеме ${this.#test_title}`
