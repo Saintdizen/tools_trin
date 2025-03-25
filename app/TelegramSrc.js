@@ -317,7 +317,7 @@ class TelegramSrc {
     }
 
     async addUsersToChat(list = [], message) {
-        console.log(list)
+        //console.log(list)
         let notInvited = []
 
         for (let users of list) {
@@ -362,7 +362,7 @@ class TelegramSrc {
 
     // Создание отчета
     async createWikiReport(wiki = undefined, date = undefined, incId = undefined) {
-        console.log(wiki)
+        //console.log(wiki)
         let domain = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.domain), "base64").toString("utf-8")
         let username = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.username), "base64").toString("utf-8")
         let password = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.password), "base64").toString("utf-8")
@@ -390,7 +390,7 @@ class TelegramSrc {
                 url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
             }, async (err, httpResponse, body) => {
                 if (err) reject(reject);
-                console.log(body)
+                //console.log(body)
                 resolve({
                     is: wiki.is,
                     link: `${domain}/pages/viewpage.action?pageId=${JSON.parse(body).id}`

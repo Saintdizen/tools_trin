@@ -29,6 +29,7 @@ class CreateChatTG extends Page {
     //#spinner_big = new Spinner(Spinner.SIZE.BIG, '10px');
     #help_create_dialog = new CreateHelpDialog();
     #menuBar = new MenuBar({test: true});
+    #comboBox_services_Options = []
     constructor() {
         super();
         // Настройки страницы
@@ -82,16 +83,16 @@ class CreateChatTG extends Page {
         //
         let spinner = new Spinner(Spinner.SIZE.SMALL, '8px auto');
         //
-        let comboBox_services_Options = []
-        let comboBox_services = new ComboBox({
+        let comboBox_services = new MultiComboBox({
             name: "Сервисы",
             title: "Сервисы",
             placeholder: "Сервисы",
             width: Styles.SIZE.WEBKIT_FILL,
             transparentBack: false,
-            optionsLen: 5
+            optionsLen: 10
         })
         comboBox_services.setDisabled(true)
+        //
         let comboBox_is_Options = []
         let comboBox_is = new MultiComboBox({
             name: "ИС",
@@ -270,23 +271,28 @@ class CreateChatTG extends Page {
         })
 
         ipcRenderer.on('user_data', async (e, TAG_TG, ROLE, GROUP) => {
-            let test = await tableServicesAndProduction.read("SERVICES!A1:B").catch(err => Log.info(err));
-            let people = undefined
-            for (let tt of test) {
-                if (!String(tt[0]).includes("---")) {
-                    if (tt[1] !== undefined) people = tt[1]
-                    comboBox_services_Options.push({title: tt[0], value: people})
+            //
+            let services = await tableServicesAndProduction.getLists();
+            for (const sheet of services.data.sheets) {
+                const title_sheet = sheet.properties.title
+                if (title_sheet.includes("SERVICES_")) {
+                    let serv = await this.#getServices(title_sheet)
+                    this.#comboBox_services_Options.push(serv)
                 }
             }
-            comboBox_services.addOptions(...comboBox_services_Options)
+            comboBox_services.addOptionsWithSections(this.#comboBox_services_Options)
             //
             comboBox_services.addValueChangeListener((e) => {
                 list_users.production_users = []
-                list_users.production_users.push({
-                    service: e.detail.title,
-                    users: e.detail.value.split("\n")
-                })
-                console.log(list_users)
+                //
+                for (let user of e.detail.values) {
+                    list_users.production_users.push({
+                        service: user.option.title,
+                        users: user.option.value.split("\n")
+                    })
+                    console.log(list_users)
+                }
+                //
                 new Notification({
                     title: 'Список пользователей', text: "Дополнен",
                     style: Notification.STYLE.SUCCESS, showTime: 3000
@@ -299,17 +305,18 @@ class CreateChatTG extends Page {
             }
             comboBox_is.addOptions(...comboBox_is_Options)
             comboBox_is.addValueChangeListener(async (e) => {
-                let fil_vals = e.detail.values.filter((val) => {
-                    return val.title.includes("ОПМПМ Первый") || val.title.includes("ОПМПМ Второй") || val.title.includes("Тестовая ИС")
+                this.#comboBox_services_Options = []
+                let var1 = e.detail.values.filter((val) => {
+                    return val.title.includes("ОПМПМ Первый") || val.title.includes("ОПМПМ Второй") || val.title.includes("МПММ 1.0") || val.title.includes("МПММ 2.0") || val.title.includes("Тестовая ИС")
                 })
-                if (fil_vals.length > 0) {
+                if (var1.length > 0) {
                     comboBox_services.clear()
                     comboBox_services.setDisabled(false)
                 } else {
-                    list_users.production_users = []
                     comboBox_services.clear()
                     comboBox_services.setDisabled(true)
                 }
+                //
                 try {
                     button_c_chat.setDisabled(true);
                     button_c_clear.setDisabled(true);
@@ -363,6 +370,21 @@ class CreateChatTG extends Page {
         //Добавление компонентов на форму
         block.add(main_block_1, inc_num, desc, pin_message) //, button_c_chat)
         return block;
+    }
+
+    async #getServices(name = String()) {
+        let options_test = []
+        let test = await tableServicesAndProduction.read(`${name}!A1:B`).catch(err => Log.info(err));
+        let people = undefined
+        for (let tt of test) {
+            if (!String(tt[0]).includes("---")) {
+                if (tt[1] !== undefined) people = tt[1]
+                if (tt[0] !== undefined) {
+                    options_test.push({title: tt[0], value: people})
+                }
+            }
+        }
+        return { title: name.replace("SERVICES_", ""), options: options_test }
     }
 
     #enableLogsNotification() {
