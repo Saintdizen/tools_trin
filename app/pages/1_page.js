@@ -201,8 +201,6 @@ class CreateChatTG extends Page {
                     style: Notification.STYLE.SUCCESS, showTime: 3000
                 }).show()
                 button_c_clear.setDisabled(true)
-                console.log(report)
-                console.log(list_users)
             }
         })
         button_c_clear.setDisabled(true)
@@ -231,10 +229,10 @@ class CreateChatTG extends Page {
                             ipcRenderer.on('setProgressLogText', (e, text) => progressBlock.add(new Label(text)))
                             ipcRenderer.send('tg_crt_chat', list_users, report)
                         } catch (e) {
-                            Log.error(e)
-                            progressBlock.add(new Label(e))
+                            Log.error(e.message)
+                            progressBlock.add(new Label(e.message))
                             new Notification({
-                                title: 'Создание чата', text: e,
+                                title: 'Создание чата', text: e.message,
                                 style: Notification.STYLE.ERROR, showTime: 3000
                             }).show()
                         }
@@ -290,7 +288,6 @@ class CreateChatTG extends Page {
                         service: user.option.title,
                         users: user.option.value.split("\n")
                     })
-                    console.log(list_users)
                 }
                 //
                 new Notification({
@@ -299,7 +296,7 @@ class CreateChatTG extends Page {
                 }).show()
             })
             //
-            let rp_names = await tableUsersGroups.getLists().catch(err => Log.info(err));
+            let rp_names = await tableUsersGroups.getLists().catch(err => Log.info(err.message));
             for (let list of rp_names.data.sheets) {
                 comboBox_is_Options.push({title: list.properties.title, value: list.properties.title});
             }
@@ -325,7 +322,7 @@ class CreateChatTG extends Page {
                     let goog_users_list = []
                     let goog_report_list = []
                     for (let table of e.detail.values) {
-                        let test = await tableUsersGroups.read(`${table.title}!A1:A`).catch(err => Log.error(err))
+                        let test = await tableUsersGroups.read(`${table.title}!A1:A`).catch(err => Log.error(err.message))
                         let cache = []
                         test.forEach(user => cache.push(user[0]))
                         goog_users_list.push({
@@ -351,12 +348,10 @@ class CreateChatTG extends Page {
                         title: 'Список пользователей', text: "Обновлен",
                         style: Notification.STYLE.SUCCESS, showTime: 3000
                     }).show()
-                    console.log("USERS: ", list_users)
-                    console.log("REPORT: ", report)
                     button_c_chat.setDisabled(false);
                     button_c_clear.setDisabled(false);
                 } catch (e) {
-                    Log.error(e);
+                    Log.error(e.message);
                     new Notification({
                         title: 'Список пользователей', text: e,
                         style: Notification.STYLE.ERROR, showTime: 3000
@@ -374,7 +369,7 @@ class CreateChatTG extends Page {
 
     async #getServices(name = String()) {
         let options_test = []
-        let test = await tableServicesAndProduction.read(`${name}!A1:B`).catch(err => Log.info(err));
+        let test = await tableServicesAndProduction.read(`${name}!A1:B`).catch(err => Log.error(err.message));
         let people = undefined
         for (let tt of test) {
             if (!String(tt[0]).includes("---")) {
@@ -397,8 +392,10 @@ class CreateChatTG extends Page {
                     showTime: 3000
                 }).show()
             } else if (type === 'error') {
+                Log.error(`${title} - ${message}`)
                 new Notification({title: title, text: message, style: Notification.STYLE.ERROR, showTime: 3000}).show()
             } else if (type === undefined) {
+                Log.info(`${title} - ${message}`)
                 new Notification({title: title, text: message, showTime: 3000}).show()
             }
         })

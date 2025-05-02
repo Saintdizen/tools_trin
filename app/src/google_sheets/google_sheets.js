@@ -25,7 +25,7 @@ class GoogleSheets {
             });
             return {sheets}
         } catch (e) {
-            Log.error(e)
+            Log.error(e.message)
         }
     }
     read = async (range) => {
@@ -37,7 +37,7 @@ class GoogleSheets {
             })
             return response.data.values;
         } catch (e) {
-            Log.error(e)
+            Log.error(e.message)
         }
     }
     write = async (range, data) => {
@@ -50,7 +50,7 @@ class GoogleSheets {
                 requestBody: {values: [data]}
             })
         } catch (e) {
-            Log.error(e)
+            Log.error(e.message)
         }
     }
     getLists = async () => {
@@ -60,7 +60,7 @@ class GoogleSheets {
                 spreadsheetId: this.#SHEET_ID
             });
         } catch (e) {
-            Log.error(e)
+            Log.error(e.message)
         }
     }
     getStatus = async () => {
@@ -71,7 +71,7 @@ class GoogleSheets {
             });
             return {status: true};
         } catch (e) {
-            return {status: false, id: this.#SHEET_ID, error: e}
+            return {status: false, id: this.#SHEET_ID, error: e.message}
         }
     }
 

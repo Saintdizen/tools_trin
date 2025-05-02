@@ -100,6 +100,7 @@ class TelegramSrc {
             fs.writeFileSync(this.#fullSessionPath, json);
             await this.#sendLog('success', `Сохранение сессии`, `Сессия успешно сохранена!`)
         } catch (e) {
+            Log.error(e.message)
             await this.#sendLog('error', `Сохранение сессии`, `Ошибка: ${e}`)
         }
     }
@@ -126,6 +127,7 @@ class TelegramSrc {
             await this.#sendLog('success', "Авторизация", `${me.firstName} ${me.lastName}`);
             await this.#createUserData(`@${me.username}`)
         } catch (e) {
+            Log.error(e.message)
             await this.#sendAuthStatus(false);
         }
     }
@@ -140,6 +142,7 @@ class TelegramSrc {
             await this.#client.signInUserWithQrCode({apiId: this.#client.apiId, apiHash: this.#client.apiHash}, {
                 onError: async (e) => {
                     await this.#sendAuthStatus('error', false, `${e}`);
+                    Log.error(e.message)
                     return true;
                 }, qrCode: async (code) => {
                     let qr = `tg://login?token=${code.token.toString("base64")}`;
@@ -278,6 +281,7 @@ class TelegramSrc {
                     schedule: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 10, 10, 0).getTime() / 1000
                 })
             } catch (e) {
+                Log.error(e.message)
                 if (e.message.includes("A wait of ")) {
                     await this.#setProgressLogText(e.message)
                 } else {
@@ -312,7 +316,7 @@ class TelegramSrc {
         } catch (e) {
             await this.#closeDialog();
             await this.#sendLog('error', `Создание чата`, `${e}`);
-            await Log.error(e);
+            Log.error(e.message);
         }
     }
 
@@ -342,6 +346,7 @@ class TelegramSrc {
                         }), rank: "Администратор",
                     }));
                 } catch (e) {
+                    Log.error(e.message)
                     if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
                         notInvited.push(user)
                         await this.#client.sendMessage(user, {
@@ -422,10 +427,7 @@ class TelegramSrc {
         request.post({
             url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
         }, async (err, httpResponse, body) => {
-            if (err) {
-                Log.error('Error:', err);
-                console.log(err)
-            }
+            if (err) Log.error(err);
             let issueKey = JSON.parse(body).key;
             await this.#client.sendMessage(this.#chat_id, {
                 message: `${domain}/browse/${issueKey}`, parseMode: "html", linkPreview: false

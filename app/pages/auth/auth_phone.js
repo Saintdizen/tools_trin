@@ -8,7 +8,7 @@ const {
     Notification,
     Icons,
     Page,
-    Route
+    Route, Log
 } = require("chuijs");
 
 class AuthPhone extends Page {
@@ -88,6 +88,7 @@ class AuthPhone extends Page {
         this.add(this.#block_main);
 
         ipcRenderer.on('sendAuthPhoneError', (e, title, message) => {
+            Log.error(`${title} - ${message}`)
             new Notification({title: title, text: message, style: Notification.STYLE.ERROR, showTime: 3000}).show();
         });
     }

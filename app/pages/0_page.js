@@ -122,7 +122,7 @@ class SettingsGoogleCheckPage extends Page {
             block.add(new Badge({text: "Успешно", style: Badge.STYLE.SUCCESS}))
         } else {
             block.add(new Badge({text: "Ошибка", style: Badge.STYLE.ERROR}))
-            Log.error(status)
+            Log.error(`Ошибка ${status.error} Таблица: ${table.getName()}`)
         }
         return status;
     }

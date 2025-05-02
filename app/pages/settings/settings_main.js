@@ -12,7 +12,7 @@ const {
     Icons,
     MenuBar,
     Route,
-    store
+    store, Log
 } = require('chuijs');
 
 //
@@ -204,6 +204,7 @@ class SettingsMain extends Page {
                         showTime: 2000
                     }).show()
                 } catch (e) {
+                    Log.error(`${this.getTitle()} - ${e.message}`)
                     new Notification({
                         title: this.getTitle(), text: e.message, style: Notification.STYLE.ERROR, showTime: 2000
                     }).show()
