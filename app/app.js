@@ -1,4 +1,4 @@
-const {AppLayout, render, ipcRenderer, Route, Log, Popup} = require('chuijs');
+const {AppLayout, render, ipcRenderer, Route, Log, Popup, shell, path, App} = require('chuijs');
 const {SettingsGoogleCheckPage} = require("./pages/0_page");
 const {SettingsMain} = require("./pages/settings/settings_main");
 const {CreateChatTG} = require("./pages/1_page");
@@ -25,6 +25,14 @@ class Apps extends AppLayout {
                             clickEvent: () => new Route().go(settings_page)
                         }),
                         AppLayout.USER_PROFILE_ITEM({
+                            title: "Логи",
+                            clickEvent: () => {
+                                let pathz = path.join(App.userDataPath(), 'logs')
+                                Log.info(pathz)
+                                shell.openPath(pathz)
+                            }
+                        }),
+                        AppLayout.USER_PROFILE_ITEM({
                             title: "Выход",
                             clickEvent: async () => {
                                 let confirm_res = await pop.confirm({
@@ -42,4 +50,4 @@ class Apps extends AppLayout {
     }
 }
 
-render(() => new Apps()).then(() => Log.info("ЗАГРУЖЕНО!!!"))
+render(() => new Apps()).then(() => Log.info("Приложение готово к работе."))

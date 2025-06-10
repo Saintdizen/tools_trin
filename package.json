@@ -2,7 +2,7 @@
   "name": "tools_trin",
   "productName": "Tools Trin",
   "description": "Tools Trin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "main.js",
   "scripts": {
     "start": "electron main.js",
@@ -83,7 +83,7 @@
     "electron-builder": "~24.6.4"
   },
   "dependencies": {
-    "chuijs": "~3.4.5",
+    "chuijs": "~3.5.1",
     "googleapis": "~133.0.0",
     "qrcode": "~1.5.3",
     "telegram": "~2.22.2",

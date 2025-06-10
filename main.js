@@ -6,7 +6,7 @@ let main = new Main({
     name: `${json.productName} (${json.version})`,
     sizes: {
         width: 950,
-        height: 650,
+        height: 665,
         minWidth: 800,
         minHeight: 600
     },
@@ -16,15 +16,16 @@ let main = new Main({
     icon: `${__dirname}/resources/icons/app/icon.png`,
     resizable: false
 });
+
+let menu = [
+    new MenuItem().help(`Версия: ${require("./package.json").version}`),
+    new MenuItem().button("Консоль", () => main.toggleDevTools()),
+    new MenuItem().quit('Выход')
+]
+
 main.start({
-    tray: [
-        new MenuItem().separator(),
-        new MenuItem().help(`Версия: ${require("./package.json").version}`),
-        new MenuItem().separator(),
-        new MenuItem().button('Показать \\ Скрыть', () => main.hideAndShow()),
-        new MenuItem().button("Консоль", () => main.toggleDevTools()),
-        new MenuItem().quit('Выход')
-    ]
+    tray: menu,
+    globalMenu: menu
 })
 main.enableAutoUpdateApp(3000);
 
