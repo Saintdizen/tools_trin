@@ -262,8 +262,17 @@ class TelegramSrc {
             await this.#setProgressText('Корректировка сообщения...')
             await this.#setProgressValue(55)
             let message = report.pinMessage.toString().replaceAll("<p>", "").replaceAll("</p>", "").split('\n');
-            message[1] = test_test.join("\n")
-            message.push(`\n<b>Приглашение в оперативный чат:</b> ${tg_link}`)
+            if (userList.main_users.length === 1 && userList.main_users.filter(users => users.is === 'ОПМПМ ЛК ОИС').length > 0) {
+                let resizeMess = message
+                message = []
+                for (let mess of resizeMess) {
+                    if (resizeMess.indexOf(mess) !== 1 && resizeMess.indexOf(mess) !== 2) message.push(mess)
+                }
+                message.push(`\n<b>Приглашение в оперативный чат:</b> ${tg_link}`)
+            } else {
+                message[1] = test_test.join("\n")
+                message.push(`\n<b>Приглашение в оперативный чат:</b> ${tg_link}`)
+            }
             const new_message = message.join('\n')
 
             //Отправка сообщения
