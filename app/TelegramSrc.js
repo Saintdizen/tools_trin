@@ -45,7 +45,7 @@ class TelegramSrc {
         if (month < 10) {
             month = "0" + month
         }
-        return String(day + "-" + month + "-" + year)
+        return String(day + "." + month + "." + year)
     }
 
     #createSessionDir() {
