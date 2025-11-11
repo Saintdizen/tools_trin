@@ -383,7 +383,7 @@ class TelegramSrc {
         let auth = "Basic " + new Buffer(username + ":" + password).toString("base64");
         // https://wiki.mos-team.ru/
         // Взятие шаблона
-        let link_template = `${domain}/rest/api/content/55678859?expand=body.storage`
+        let link_template = `${domain}/rest/api/content/169077617?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
             request.get({url: link_template, headers: {"Authorization": auth}}, async (err, httpResponse, body) => {
                 if (err) reject(reject);
