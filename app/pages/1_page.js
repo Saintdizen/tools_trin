@@ -304,7 +304,7 @@ class CreateChatTG extends Page {
             comboBox_is.addValueChangeListener(async (e) => {
                 this.#comboBox_services_Options = []
                 let var1 = e.detail.values.filter((val) => {
-                    return val.title.includes("ОПМПМ Первый") || val.title.includes("ОПМПМ Второй") || val.title.includes("МПММ 1.0") || val.title.includes("МПММ 2.0") || val.title.includes("Тестовая ИС") || val.title.includes("АИС УЗ")
+                    return val.title.includes("ОПМПМ Первый") || val.title.includes("ОПМПМ Второй") || val.title.includes("МПММ 1.0") || val.title.includes("МПММ 2.0") || val.title.includes("Тестовая ИС") || val.title.includes("АИС УЗ") || val.title.includes("ЦА")
                 })
                 if (var1.length > 0) {
                     comboBox_services.clear()
