@@ -1,6 +1,6 @@
 const {
     Page, Button, Label, fs, store, shell, App, path, TextInput,
-    Route, ipcRenderer, Badge, Log, ContentBlock, Styles
+    Route, ipcRenderer, Badge, Log, ContentBlock, Styles, Spinner
 } = require('chuijs');
 const {SettingsStoreMarks} = require("../settings/settings_store_marks");
 const {AuthMain} = require("./auth/auth");
@@ -37,9 +37,28 @@ class SettingsGoogleCheckPage extends Page {
             this.#main_block.add(this.#b1);
         } else {
             setTimeout(async () => {
-                let status_1 = await this.checkTable(new Tables().tableUsersGroups());
-                let status_2 = await this.checkTable(new Tables().tableAuthSettings());
-                let status_3 = await this.checkTable(new Tables().tableServicesAndProduction());
+                let tables = {
+                    t0: "Проверка таблиц",
+                    t1: new Tables().tableUsersGroups(),
+                    t2: new Tables().tableAuthSettings(),
+                    t3: new Tables().tableServicesAndProduction()
+                }
+                let blocks = {
+                    b1: this.addBlock(tables.t1.getName()),
+                    b2: this.addBlock(tables.t2.getName()),
+                    b3: this.addBlock(tables.t3.getName()),
+                }
+
+                let main_block = new ContentBlock({
+                    direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.WRAP,
+                    align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
+                });
+                main_block.setWidth(Styles.SIZE.WEBKIT_FILL);
+                main_block.add(new Label({ text: tables.t0 }), blocks.b1, blocks.b2, blocks.b3);
+                this.#main_block.add(main_block)
+                let status_1 = await this.checkTable(new Tables().tableUsersGroups(), blocks.b1);
+                let status_2 = await this.checkTable(new Tables().tableAuthSettings(), blocks.b2);
+                let status_3 = await this.checkTable(new Tables().tableServicesAndProduction(), blocks.b3);
                 if (status_1.status && status_2.status && status_3.status) await this.checkAuth();
             }, 200);
         }
@@ -51,7 +70,7 @@ class SettingsGoogleCheckPage extends Page {
             align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
         });
         let label1 = new Label({markdownText: "Не установлен ключ доступа к Google"});
-        let label2 = new Label({markdownText: "Нажмите кнопку 'Открыть папку' и скопируйте ключ **credentials.json**"});
+        let label2 = new Label({markdownText: "Нажмите кнопку **Открыть папку** и скопируйте ключ **credentials.json**"});
         block1.add(label1, label2);
         let b_open_path = new Button({title: "Открыть папку"});
         b_open_path.addClickListener(() => shell.openPath(this.#path_folder).then(r => Log.info(r)));
@@ -59,6 +78,8 @@ class SettingsGoogleCheckPage extends Page {
         let int1 = setInterval(() => {
             if (fs.existsSync(this.#path_key)) {
                 block1.remove(b_open_path);
+                label1.setMarkdownText("Ключ установлен")
+                label2.setMarkdownText("Нажмите кнопку **Далее**")
                 let b_next = new Button({title: "Далее"});
                 block1.add(b_next);
                 b_next.addClickListener(() => {
@@ -104,24 +125,31 @@ class SettingsGoogleCheckPage extends Page {
     addBlock(text) {
         let block = new ContentBlock({
             direction: Styles.DIRECTION.ROW, wrap: Styles.WRAP.WRAP,
-            align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
+            align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.SPACE_BEETWEEN
         });
-        block.setWidth(Styles.SIZE.WEBKIT_FILL);
+        block.setWidth("47%");
+        block.setHeight("50px")
         block.add(new Label({
             markdownText: text, wordBreak: Styles.WORD_BREAK.BREAK_ALL
         }))
         return block;
     }
 
-    async checkTable(table) {
-        let block = this.addBlock(`Проверка таблицы **${table.getName()}**`);
-        this.#main_block.add(block)
-        //
+    async checkTable(table, block) {
+        let spinner = new Spinner(Spinner.SIZE.SMALL, "0px 85px 0px 0px")
+        block.add(spinner)
         let status = await table.getStatus()
         if (status.status) {
-            block.add(new Badge({text: "Успешно", style: Badge.STYLE.SUCCESS}))
+            block.remove(spinner)
+            setTimeout(() => {
+                block.add(new Badge({text: "Соединение установлено", style: Badge.STYLE.SUCCESS}))
+            }, 150)
+            Log.info(`Подключение таблице "${table.getName()}" установлено`)
         } else {
-            block.add(new Badge({text: "Ошибка", style: Badge.STYLE.ERROR}))
+            block.remove(spinner)
+            setTimeout(() => {
+                block.add(new Badge({text: "Соединение не установлено", style: Badge.STYLE.ERROR}))
+            }, 150)
             Log.error(`Ошибка ${status.error} Таблица: ${table.getName()}`)
         }
         return status;
