@@ -98,6 +98,7 @@ class TelegramSrc {
             let sessionString = await this.#client.session.save();
             let json = `{"session": "${sessionString}"}`
             fs.writeFileSync(this.#fullSessionPath, json);
+            Log.info("Сессия успешно сохранена!")
             await this.#sendLog('success', `Сохранение сессии`, `Сессия успешно сохранена!`)
         } catch (e) {
             Log.error(e.message)
@@ -111,6 +112,7 @@ class TelegramSrc {
             if (user[0] === tag_tg) {
                 setTimeout(async () => {
                     this.#mainApp.getWindow().webContents.send("user_data", user[0], user[1], user[2]);
+                    Log.info("Настройки пользователя загружены")
                     await this.#sendLog('success', `Настройки пользователя`, `Настройки загружены`)
                 }, 1000);
             }
@@ -126,6 +128,7 @@ class TelegramSrc {
             await this.#sendAuthStatus(true);
             await this.#sendLog('success', "Авторизация", `${me.firstName} ${me.lastName}`);
             await this.#createUserData(`@${me.username}`)
+            Log.info("Получение информации о пользователе")
         } catch (e) {
             Log.error(e.message)
             await this.#sendAuthStatus(false);
@@ -133,6 +136,7 @@ class TelegramSrc {
     }
 
     async getAuth() {
+        Log.info("Получение информации об авторизации")
         let auth = await this.#client.checkAuthorization();
         this.#mainApp.getWindow().webContents.send("checkAuthorization", auth)
     }
@@ -175,6 +179,7 @@ class TelegramSrc {
                 password: async () => await password,
                 onError: async (err) => {
                     await this.#sendAuthPhoneError("Авторизация по номеру", err)
+                    Log.error(err.message)
                     return true;
                 },
             }).then(async () => {
@@ -203,6 +208,7 @@ class TelegramSrc {
     }) {
         try {
             //Создать группу
+            Log.info("Создание группы...")
             await this.#setProgressText('Создание группы...')
             await this.#setProgressValue(25)
             //
@@ -219,6 +225,7 @@ class TelegramSrc {
             this.#chat_id = res_cr_chat.updates[2].channelId.value;
 
             //Изменение разрешений группы
+            Log.info("Изменение разрешений группы...")
             await this.#client.invoke(new Api.messages.EditChatDefaultBannedRights({
                 peer: this.#chat_id, bannedRights: new Api.ChatBannedRights({
                     until_date: 0, view_messages: true, change_info: true, invite_users: true, pin_messages: true,
@@ -226,6 +233,7 @@ class TelegramSrc {
             }));
 
             //Получение ссылки на приглашение в чат
+            Log.info("Получение ссылки на приглашение в чат...")
             await this.#setProgressText('Получение ссылки на приглашение в чат...')
             await this.#setProgressValue(40)
             const invite_link = await this.#client.invoke(new Api.messages.ExportChatInvite({
@@ -236,9 +244,11 @@ class TelegramSrc {
             let test_test = []
             this.#report_link = []
             // Проверка активации настройки
+            Log.info("Проверка настроек Atlassian... (Создание отчета)")
             if (store.get(SettingsStoreMarks.SETTINGS.atlassian.status)) {
                 // Создание отчета
                 if (store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.create_report.status)) {
+                    Log.info("Создание отчета...")
                     await this.#setProgressText('Создание отчета...')
                     await this.#setProgressValue(50)
                     if (report.wiki.length === 1) {
@@ -259,6 +269,7 @@ class TelegramSrc {
 
 
             //Корректировка сообщения
+            Log.info("Корректировка сообщения...")
             await this.#setProgressText('Корректировка сообщения...')
             await this.#setProgressValue(55)
             let message = report.pinMessage.toString().replaceAll("<p>", "").replaceAll("</p>", "").split('\n');
@@ -275,7 +286,8 @@ class TelegramSrc {
             }
             const new_message = message.join('\n')
 
-            //Отправка сообщения
+            //Отправка и закрепление сообщения
+            Log.info("Отправка и закрепление сообщения...")
             await this.#setProgressText('Отправка и закрепление сообщения...')
             await this.#setProgressValue(70)
             try {
@@ -297,7 +309,8 @@ class TelegramSrc {
                     await this.#setProgressLogText(e.message)
                 }
             }
-            //Добавить людей
+            //Добавление пользователей в чат
+            Log.info("Добавление пользователей в чат...")
             await this.#setProgressText('Добавление пользователей в чат...')
             await this.#setProgressValue(85)
             let all_users = []
@@ -316,11 +329,16 @@ class TelegramSrc {
             await this.#setProgressValue(100)
             await this.#closeDialog()
             await this.#sendNotification(json.description, 'Чат успешно создан!');
+            Log.info("Чат успешно создан!")
 
             // Проверка активации настройки
+            Log.info("Проверка настроек Atlassian... (Создание задачи)")
             if (store.get(SettingsStoreMarks.SETTINGS.atlassian.status)) {
                 // Создание задачи в JIRA
-                if (store.get(SettingsStoreMarks.SETTINGS.atlassian.jira.create_task.status)) await this.createJiraIssue()
+                if (store.get(SettingsStoreMarks.SETTINGS.atlassian.jira.create_task.status)) {
+                    Log.info("Создание задачи...")
+                    await this.createJiraIssue()
+                }
             }
         } catch (e) {
             await this.#closeDialog();
@@ -386,7 +404,11 @@ class TelegramSrc {
         let link_template = `${domain}/rest/api/content/169077617?expand=body.storage`
         let template = await new Promise((resolve, reject) => {
             request.get({url: link_template, headers: {"Authorization": auth}}, async (err, httpResponse, body) => {
-                if (err) reject(reject);
+                if (err) {
+                    Log.error(err)
+                    Log.error(err.message);
+                    reject(reject);
+                }
                 resolve(body)
             });
         });
@@ -403,7 +425,11 @@ class TelegramSrc {
             request.post({
                 url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
             }, async (err, httpResponse, body) => {
-                if (err) reject(reject);
+                if (err) {
+                    Log.error(err)
+                    Log.error(err.message);
+                    reject(reject);
+                }
                 //console.log(body)
                 resolve({
                     is: wiki.is,

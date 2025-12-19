@@ -201,6 +201,7 @@ class CreateChatTG extends Page {
                     style: Notification.STYLE.SUCCESS, showTime: 3000
                 }).show()
                 button_c_clear.setDisabled(true)
+                Log.info("Очищение полей")
             }
         })
         button_c_clear.setDisabled(true)
@@ -214,6 +215,7 @@ class CreateChatTG extends Page {
                     okText: 'OK', cancelText: 'Отмена',
                 })
                 if (confirm_res) {
+                    Log.info("Начало создания чата")
                     if (list_users.length !== 0) {
                         modal.open()
                         progressBar.setProgressText('Получение данных...')
@@ -237,6 +239,7 @@ class CreateChatTG extends Page {
                             }).show()
                         }
                     } else {
+                        Log.error("Выберите список пользователей")
                         new Notification({
                             title: 'Создание чата', text: 'Выберите список пользователей',
                             style: Notification.STYLE.ERROR, showTime: 3000
@@ -290,6 +293,7 @@ class CreateChatTG extends Page {
                     })
                 }
                 //
+                Log.info(`Изменение поля СЕРВИСЫ (production_users): ${JSON.stringify(list_users)}`)
                 new Notification({
                     title: 'Список пользователей', text: "Дополнен",
                     style: Notification.STYLE.SUCCESS, showTime: 3000
@@ -344,6 +348,9 @@ class CreateChatTG extends Page {
                     }
                     report.wiki = goog_report_list
                     list_users.main_users = goog_users_list
+
+                    Log.info(`Изменение поля ИС (wiki): ${JSON.stringify(report)}`)
+                    Log.info(`Изменение поля ИС (main_users): ${JSON.stringify(list_users)}`)
                     new Notification({
                         title: 'Список пользователей', text: "Обновлен",
                         style: Notification.STYLE.SUCCESS, showTime: 3000
