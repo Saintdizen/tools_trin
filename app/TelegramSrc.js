@@ -374,7 +374,7 @@ class TelegramSrc {
                     }));
                 } catch (e) {
                     Log.error(e.message)
-                    if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
+                    if (e.message.includes("USER_PRIVACY_RESTRICTED") || e.message.includes("PRIVACY_PREMIUM_REQUIRED")) {
                         notInvited.push(user)
                         await this.#client.sendMessage(user, {
                             message: message, parseMode: 'html', linkPreview: true
