@@ -313,15 +313,25 @@ class TelegramSrc {
             Log.info("Добавление пользователей в чат...")
             await this.#setProgressText('Добавление пользователей в чат...')
             await this.#setProgressValue(85)
-            let all_users = []
+            let all_users_normal = []
+            let all_users_premium = []
             const main_users = await this.addUsersToChat(userList.main_users, new_message)
             const production_users = await this.addUsersToChat(userList.production_users, new_message)
-            all_users.push(...main_users)
-            all_users.push(...production_users)
+            all_users_normal.push(...main_users.notInvited)
+            all_users_normal.push(...production_users.notInvited)
 
-            if (all_users.length > 0) {
+            if (all_users_normal.length > 0) {
                 await this.#client.sendMessage(this.#chat_id, {
-                    message: `Люди не добавленные в чат:\n${all_users.join("\n")}\nИм отправлено личное сообщение.`, parseMode: 'html', linkPreview: false
+                    message: `Люди не добавленные в чат:\n${all_users_normal.join("\n")}\nИм отправлено личное сообщение.`, parseMode: 'html', linkPreview: false
+                })
+            }
+
+            all_users_premium.push(...main_users.notInvitedPremium)
+            all_users_premium.push(...production_users.notInvitedPremium)
+
+            if (all_users_premium.length > 0) {
+                await this.#client.sendMessage(this.#chat_id, {
+                    message: `Не удалось добавить людей в чат из-за премиальных настроек приватности:\n${all_users_premium.join("\n")}`, parseMode: 'html', linkPreview: false
                 })
             }
 
@@ -350,6 +360,7 @@ class TelegramSrc {
     async addUsersToChat(list = [], message) {
         //console.log(list)
         let notInvited = []
+        let notInvitedPremium = []
 
         for (let users of list) {
             for (let user of Array.from(new Set(users.users))) {
@@ -374,7 +385,12 @@ class TelegramSrc {
                     }));
                 } catch (e) {
                     Log.error(e.message)
-                    if (e.message.includes("USER_PRIVACY_RESTRICTED") || e.message.includes("PRIVACY_PREMIUM_REQUIRED")) {
+
+                    if (e.message.includes("PRIVACY_PREMIUM_REQUIRED")) {
+                        notInvitedPremium.push(user)
+                    }
+
+                    if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
                         notInvited.push(user)
                         await this.#client.sendMessage(user, {
                             message: message, parseMode: 'html', linkPreview: true
@@ -389,7 +405,10 @@ class TelegramSrc {
                 }
             }
         }
-        return notInvited
+        return {
+            notInvited: notInvited,
+            notInvitedPremium: notInvitedPremium,
+        }
     }
 
     // Создание отчета
