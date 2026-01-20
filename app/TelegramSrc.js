@@ -392,9 +392,17 @@ class TelegramSrc {
 
                     if (e.message.includes("USER_PRIVACY_RESTRICTED")) {
                         notInvited.push(user)
-                        await this.#client.sendMessage(user, {
-                            message: message, parseMode: 'html', linkPreview: true
-                        })
+                        try {
+                            await this.#client.sendMessage(user, {
+                                message: message, parseMode: 'html', linkPreview: true
+                            })
+                        } catch (e) {
+                            if (e.message.includes("PRIVACY_PREMIUM_REQUIRED")) {
+                                notInvitedPremium.push(user)
+                            } else {
+                                Log.error(e.message)
+                            }
+                        }
                     }
                     if (e.message.includes("A wait of ")) {
                         await this.#setProgressLogText(e.message)
