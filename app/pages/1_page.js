@@ -322,7 +322,7 @@ class CreateChatTG extends Page {
                     button_c_chat.setDisabled(true);
                     button_c_clear.setDisabled(true);
                     // Чтение таблиц
-                    let report_list = await tableAuthSettings.read(`REPORTS!A1:D`);
+                    let report_list = await tableAuthSettings.read(`REPORTS!A1:E`);
                     let goog_users_list = []
                     let goog_report_list = []
                     for (let table of e.detail.values) {
@@ -341,7 +341,8 @@ class CreateChatTG extends Page {
                                     spaces: {
                                         space: val[2],
                                         pageId: val[3]
-                                    }
+                                    },
+                                    label: val[4]
                                 })
                             }
                         })

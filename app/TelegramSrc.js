@@ -254,12 +254,14 @@ class TelegramSrc {
                     if (report.wiki.length === 1) {
                         for (const space of report.wiki) {
                             let req = await this.createWikiReport(space, report.date, report.incId);
+                            await this.addWikiReportLabels(req.wikiId, req.label)
                             test_test.push(`<b><a href="${req.link}">Ссылка</a></b> на отчет по инциденту`)
                             this.#report_link.push(req.link)
                         }
                     } else {
                         for (const space of report.wiki) {
                             let req = await this.createWikiReport(space, report.date, report.incId);
+                            await this.addWikiReportLabels(req.wikiId, req.label)
                             test_test.push(`${req.is} - <b><a href="${req.link}">Ссылка</a></b> на отчет по инциденту`)
                             this.#report_link.push(`${req.is} - ${req.link}`)
                         }
@@ -459,9 +461,40 @@ class TelegramSrc {
                 }
                 //console.log(body)
                 resolve({
+                    wikiId: JSON.parse(body).id,
                     is: wiki.is,
+                    label: wiki.label,
                     link: `${domain}/pages/viewpage.action?pageId=${JSON.parse(body).id}`
                 })
+            });
+        });
+    }
+    async addWikiReportLabels(idWiki = undefined, labelName = String()) {
+        //console.log(wiki)
+        let domain = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.wiki.domain), "base64").toString("utf-8")
+        let username = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.username), "base64").toString("utf-8")
+        let password = new Buffer(store.get(SettingsStoreMarks.SETTINGS.atlassian.password), "base64").toString("utf-8")
+        let auth = "Basic " + new Buffer(username + ":" + password).toString("base64");
+        // https://wiki.mos-team.ru/
+        // Создание страницы
+        let link = `${domain}/rest/api/content/${idWiki}/label`
+
+        let data = [{
+            "prefix": "global",
+            "name": labelName
+        }]
+
+        return await new Promise((resolve, reject) => {
+            request.post({
+                url: link, body: JSON.stringify(data), headers: {"Content-Type": "application/json", "Authorization": auth}
+            }, async (err, httpResponse, body) => {
+                if (err) {
+                    Log.error(err)
+                    Log.error(err.message);
+                    reject(reject);
+                }
+                Log.info(body);
+                resolve(body)
             });
         });
     }
