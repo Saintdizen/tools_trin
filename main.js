@@ -6,9 +6,9 @@ let main = new Main({
     name: `${json.productName} (${json.version})`,
     sizes: {
         width: 950,
-        height: 665,
+        height: 757,
         minWidth: 800,
-        minHeight: 600
+        minHeight: 757
     },
     render: `${__dirname}/app/app.js`,
     devTools: false,
