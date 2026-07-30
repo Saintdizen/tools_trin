@@ -120,6 +120,15 @@ class TelegramSrc {
     }
 
     //
+    async getUserTG() {
+        await this.#client.connect();
+        try {
+            return await this.#client.getMe();
+        } catch (e) {
+            return null
+        }
+    }
+
     async getUser() {
         await this.#client.connect();
         try {
@@ -284,6 +293,26 @@ class TelegramSrc {
             //     }
             // }
 
+            // ТУТ ВСТАВКА ОТВЕТСТВЕННОГО И МАНАГЕРА
+            const TG = await this.getUserTG()
+            const users = await tableAuthSettings.read('USERS!A1:D').catch(async err => await this.#sendLog('error', `Настройки пользователя`, err));
+            users.forEach(user => {
+                if (user[0] === `@${TG.username}`) {
+                    message.push(`\n<b>Ответственный:</b> ${user[2]}, ${user[3]}, ${user[0]}`)
+                }
+            })
+            // SM
+            message.push(`\n<b>Сервис-менеджер ДИТ:</b>`)
+            const sm = await tableAuthSettings.read('SM!A1:C').catch(async err => await this.#sendLog('error', `Настройки пользователя`, err));
+            is_names.forEach((name) => {
+                sm.forEach(sm => {
+                    if (sm[0].includes(name)) {
+                        message.push(`${sm[0]}, ${sm[1]}, ${sm[2]}`)
+                    }
+                })
+            })
+            //
+            message.push(`\n`)
             message.push(test_test.join("\n"))
             message.push(`\n<b>Приглашение в оперативный чат:</b> ${tg_link}`)
             const new_message = message.join('\n')
