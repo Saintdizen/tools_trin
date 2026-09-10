@@ -8,7 +8,7 @@ const {
     Notification,
     Icons,
     Page,
-    Route, Log
+    Route, Log, Card
 } = require("chuijs");
 
 class AuthPhone extends Page {
@@ -46,10 +46,23 @@ class AuthPhone extends Page {
     #password_send = new Button({title: "Авторизоваться"});
     //
     #back = new Button({title: "Назад", icon: Icons.NAVIGATION.ARROW_BACK, reverse: true});
+    //
+    #main_card = new ContentBlock({
+        direction: Styles.DIRECTION.COLUMN,
+        wrap: Styles.WRAP.NOWRAP,
+        align: Styles.ALIGN.CENTER,
+        justify: Styles.JUSTIFY.CENTER
+    });
+    #card = new Card({
+        id: 'auth',
+        title: 'Авторизация по номеру телефона',
+        // description: 'Пояснение',
+        icon: Icons.ACTIONS.LOGIN
+    })
 
     constructor(back, mainPage) {
         super();
-        this.setTitle('Tools Trin: Авторизация по номеру телефона');
+        this.setTitle('Tools Trin');
         this.setMain(false);
         this.setFullHeight()
         this.setFullWidth()
@@ -57,6 +70,8 @@ class AuthPhone extends Page {
         ipcRenderer.send("loginInPhone");
         // ===
         // Настройки главного блока и полей ввода
+        this.#main_card.setWidth(Styles.SIZE.WEBKIT_FILL);
+        this.#main_card.setHeight(Styles.SIZE.WEBKIT_FILL);
         this.#block_main.setWidth(Styles.SIZE.WEBKIT_FILL);
         this.#block_main.setHeight(Styles.SIZE.WEBKIT_FILL);
         this.#input_code.setDisabled(true);
@@ -85,7 +100,10 @@ class AuthPhone extends Page {
         this.#block_code.add(this.#input_code, this.#code_send);
         this.#block_password.add(this.#input_password, this.#password_send);
         this.#block_main.add(this.#back, this.#block_phone, this.#block_code, this.#block_password);
-        this.add(this.#block_main);
+
+        this.#card.add(this.#block_main)
+        this.#main_card.add(this.#card)
+        this.add(this.#main_card);
 
         ipcRenderer.on('sendAuthPhoneError', (e, title, message) => {
             Log.error(`${title} - ${message}`)

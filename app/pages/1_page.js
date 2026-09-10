@@ -2,10 +2,11 @@ const {
     Page, Button, TextInput, ContentBlock,
     Styles, Notification, ipcRenderer, Dialog,
     ProgressBar, Label, Spinner,
-    TextEditor, MenuBar, Icons, Log, Popup, ComboBox, MultiComboBox
+    TextEditor, MenuBar, Icons, Log, Popup, ComboBox, MultiComboBox, Card
 } = require('chuijs');
 const {CreateHelpDialog} = require("../src/dialogs/dialogs");
 const {Tables} = require('../src/google_sheets/tables');
+const {setStyles} = require("chuijs/framework/modules/chui_functions");
 let tableUsersGroups = new Tables().tableUsersGroups();
 let tableAuthSettings = new Tables().tableAuthSettings();
 let tableServicesAndProduction = new Tables().tableServicesAndProduction();
@@ -30,13 +31,45 @@ class CreateChatTG extends Page {
     #help_create_dialog = new CreateHelpDialog();
     #menuBar = new MenuBar({test: true});
     #comboBox_services_Options = []
+
+    #main_card = new ContentBlock({
+        direction: Styles.DIRECTION.COLUMN,
+        wrap: Styles.WRAP.NOWRAP,
+        align: Styles.ALIGN.CENTER,
+        justify: Styles.JUSTIFY.CENTER
+    });
+    #card1 = new Card({
+        id: 'card1',
+        title: 'Системы',
+        description: 'Пояснение',
+        width: Styles.SIZE.WEBKIT_FILL,
+        style: "card_style_1"
+    })
+    #card2 = new Card({
+        id: 'card2',
+        title: 'Инцидент',
+        description: 'Запоняется номер и описание',
+        width: Styles.SIZE.WEBKIT_FILL,
+        style: "card_style_2"
+    })
+    #card3 = new Card({
+        id: 'card3',
+        title: 'Закрепленное сообщение',
+        description: 'Это сообщение будет отображаться в чате первым',
+        width: Styles.SIZE.WEBKIT_FILL,
+        style: "card_style_3"
+    })
+
     constructor() {
         super();
+        //
+        setStyles(__dirname + "/card.css", "card_styles");
         // Настройки страницы
         this.setTitle('Tools Trin: Создание чата в Telegram');
         this.setMain(true);
         this.setFullWidth();
         this.setFullHeight();
+        this.disablePadding();
         this.#enableLogsNotification();
         this.add(this.#help_create_dialog)
         this.#menuBar = new MenuBar({test: true});
@@ -104,22 +137,22 @@ class CreateChatTG extends Page {
         })
         // Номер инцидента
         let inc_num = new TextInput({
-            title: 'Номер инцидента',
-            placeholder: 'Номер инцидента',
+            title: 'Номер',
+            placeholder: 'IM...',
             width: '-webkit-fill-available',
             required: false
         });
         inc_num.setValue('IM')
         // Описение инцидента
         let desc = new TextInput({
-            title: 'Описание инцидента',
-            placeholder: 'Описание инцидента',
+            title: 'Описание',
+            placeholder: 'Описание',
             width: '-webkit-fill-available',
             required: false
         });
         // Закрепленное сообщение
         let pin_message = new TextEditor(Styles.SIZE.WEBKIT_FILL, {
-            title: "Закрепленное сообщение",
+            // title: "Закрепленное сообщение",
             controls: {
                 UNDO_REDO: true,
                 BLOCK_FORMAT: false,
@@ -372,7 +405,12 @@ class CreateChatTG extends Page {
         })
         modal.addToFooter(button_close)
         //Добавление компонентов на форму
-        block.add(main_block_1, inc_num, desc, pin_message) //, button_c_chat)
+
+        this.#card1.add(main_block_1)
+        this.#card2.add(inc_num, desc)
+        this.#card3.add(pin_message)
+
+        block.add(this.#card1, this.#card2, this.#card3) //, button_c_chat)
         return block;
     }
 

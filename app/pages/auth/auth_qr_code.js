@@ -8,7 +8,7 @@ const {
     Notification,
     Icons,
     Page,
-    Route
+    Route, Card
 } = require("chuijs");
 const QRCode = require("qrcode");
 
@@ -25,18 +25,30 @@ class AuthQRCode extends Page {
         align: Styles.ALIGN.CENTER,
         justify: Styles.JUSTIFY.CENTER
     });
+    #main_card = new ContentBlock({
+        direction: Styles.DIRECTION.COLUMN,
+        wrap: Styles.WRAP.NOWRAP,
+        align: Styles.ALIGN.CENTER,
+        justify: Styles.JUSTIFY.CENTER
+    });
+    #card = new Card({
+        id: 'auth',
+        title: 'Авторизация по QR коду',
+        // description: 'Пояснение',
+        icon: Icons.ACTIONS.LOGIN
+    })
     #back = new Button({title: "Назад", icon: Icons.NAVIGATION.ARROW_BACK, reverse: true});
     #input_pass = new PasswordInput({title: "Пароль", width: "225px"});
     #generate = new Button({title: "Сгенерировать", icon: Icons.COMMUNICATION.QR_CODE})
 
     constructor(back, mainPage) {
         super();
-        this.setTitle('Tools Trin: Авторизация по QR коду');
+        this.setTitle('Tools Trin');
         this.setMain(false);
         this.setFullHeight();
         this.setFullWidth();
-        this.#main.setWidth(Styles.SIZE.WEBKIT_FILL)
-        this.#main.setHeight(Styles.SIZE.WEBKIT_FILL)
+        this.#main_card.setWidth(Styles.SIZE.WEBKIT_FILL)
+        this.#main_card.setHeight(Styles.SIZE.WEBKIT_FILL)
         this.#QRCode_block.setWidth("-webkit-fill-available")
         this.#main.add(this.#back)
         this.#main.add(this.#input_pass, this.#generate)
@@ -63,7 +75,9 @@ class AuthQRCode extends Page {
                 })
             })
         })
-        this.add(this.#main);
+        this.add(this.#main_card);
+        this.#main_card.add(this.#card)
+        this.#card.add(this.#main)
         ipcRenderer.on("loginInQRCode", () => {
             new Route().go(mainPage)
         })

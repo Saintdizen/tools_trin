@@ -1,4 +1,4 @@
-const {ContentBlock, Styles, Button, Icons, Label, Page, Route} = require("chuijs");
+const {ContentBlock, Styles, Button, Icons, Label, Page, Route, Card} = require("chuijs");
 const {AuthPhone} = require("./auth_phone");
 const {AuthQRCode} = require("./auth_qr_code");
 const {AuthHelpDialog} = require("../../src/dialogs/dialogs");
@@ -11,6 +11,18 @@ class AuthMain extends Page {
         align: Styles.ALIGN.CENTER,
         justify: Styles.JUSTIFY.CENTER
     });
+    #main = new ContentBlock({
+        direction: Styles.DIRECTION.COLUMN,
+        wrap: Styles.WRAP.NOWRAP,
+        align: Styles.ALIGN.CENTER,
+        justify: Styles.JUSTIFY.CENTER
+    });
+    #card = new Card({
+        id: 'auth',
+        title: 'Авторизация',
+        // description: 'Пояснение',
+        icon: Icons.ACTIONS.LOGIN
+    })
 
     constructor(mainPage) {
         super();
@@ -22,11 +34,9 @@ class AuthMain extends Page {
         this.add(this.#block_main)
         this.#block_main.setWidth(Styles.SIZE.WEBKIT_FILL);
         this.#block_main.setHeight(Styles.SIZE.WEBKIT_FILL);
-        this.#block_main.add(
-            new Label({
-                markdownText: "**Авторизация**",
-                wordBreak: Styles.WORD_BREAK.BREAK_ALL
-            }),
+        this.#block_main.add(this.#card)
+        this.#card.add(this.#main)
+        this.#main.add(
             new Button({
                 title: "По QR-коду",
                 icon: Icons.COMMUNICATION.QR_CODE,

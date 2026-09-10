@@ -1,6 +1,6 @@
 const {
     Page, Button, Label, fs, store, shell, App, path, TextInput,
-    Route, ipcRenderer, Badge, Log, ContentBlock, Styles, Spinner
+    Route, ipcRenderer, Badge, Log, ContentBlock, Styles, Spinner, Icons, Card
 } = require('chuijs');
 const {SettingsStoreMarks} = require("../settings/settings_store_marks");
 const {AuthMain} = require("./auth/auth");
@@ -14,6 +14,16 @@ class SettingsGoogleCheckPage extends Page {
         direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.NOWRAP,
         align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
     });
+    #block_for_card = new ContentBlock({
+        direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.NOWRAP,
+        align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
+    });
+    #card = new Card({
+        id: 'check_table',
+        title: 'Проверка таблиц',
+        // description: 'Пояснение',
+        icon: Icons.NAVIGATION.CHECK
+    })
     #b1 = undefined;
     #b2 = undefined;
     constructor(MainPage) {
@@ -26,6 +36,8 @@ class SettingsGoogleCheckPage extends Page {
         this.setFullWidth();
         this.setFullHeight();
         this.add(this.#main_block);
+        this.#main_block.add(this.#card)
+        this.#card.add(this.#block_for_card)
         if (!fs.existsSync(this.#path_folder)) fs.mkdirSync(this.#path_folder);
         let key = store.get(SettingsStoreMarks.SETTINGS.google.json_key_path) === undefined;
         let t1 = store.get(SettingsStoreMarks.SETTINGS.google.tables.users_groups_id) === undefined;
@@ -34,11 +46,12 @@ class SettingsGoogleCheckPage extends Page {
         this.#b1 = this.step1Block();
         this.#b2 = this.step2Block();
         if (key && t1 && t2 && t3) {
-            this.#main_block.add(this.#b1);
+            this.#block_for_card.add(this.#b1);
         } else {
             setTimeout(async () => {
+                this.#card.setIcon(Icons.NAVIGATION.CHECK);
+                this.#card.setTitle("Проверка подключения к таблицам")
                 let tables = {
-                    t0: "Проверка таблиц",
                     t1: new Tables().tableUsersGroups(),
                     t2: new Tables().tableAuthSettings(),
                     t3: new Tables().tableServicesAndProduction()
@@ -54,8 +67,8 @@ class SettingsGoogleCheckPage extends Page {
                     align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
                 });
                 main_block.setWidth(Styles.SIZE.WEBKIT_FILL);
-                main_block.add(new Label({ text: tables.t0 }), blocks.b1, blocks.b2, blocks.b3);
-                this.#main_block.add(main_block)
+                main_block.add(blocks.b1, blocks.b2, blocks.b3);
+                this.#block_for_card.add(main_block)
                 let status_1 = await this.checkTable(new Tables().tableUsersGroups(), blocks.b1);
                 let status_2 = await this.checkTable(new Tables().tableAuthSettings(), blocks.b2);
                 let status_3 = await this.checkTable(new Tables().tableServicesAndProduction(), blocks.b3);
@@ -65,26 +78,30 @@ class SettingsGoogleCheckPage extends Page {
     }
 
     step1Block() {
+        this.#card.setIcon(Icons.NAVIGATION.CLOSE)
+        this.#card.setTitle("Не установлен ключ доступа к Google")
         let block1 = new ContentBlock({
             direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.NOWRAP,
             align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
         });
-        let label1 = new Label({markdownText: "Не установлен ключ доступа к Google"});
         let label2 = new Label({markdownText: "Нажмите кнопку **Открыть папку** и скопируйте ключ **credentials.json**"});
-        block1.add(label1, label2);
+        block1.add(label2);
         let b_open_path = new Button({title: "Открыть папку"});
         b_open_path.addClickListener(() => shell.openPath(this.#path_folder).then(r => Log.info(r)));
         block1.add(b_open_path);
         let int1 = setInterval(() => {
             if (fs.existsSync(this.#path_key)) {
                 block1.remove(b_open_path);
-                label1.setMarkdownText("Ключ установлен")
+                this.#card.setIcon(Icons.NAVIGATION.CHECK);
+                this.#card.setTitle("Ключ установлен")
                 label2.setMarkdownText("Нажмите кнопку **Далее**")
                 let b_next = new Button({title: "Далее"});
                 block1.add(b_next);
                 b_next.addClickListener(() => {
-                    this.#main_block.remove(this.#b1);
-                    this.#main_block.add(this.#b2);
+                    this.#block_for_card.remove(this.#b1);
+                    this.#card.setIcon(Icons.NAVIGATION.CLOSE);
+                    this.#card.setTitle("Установите ключи для доступа к таблицам")
+                    this.#block_for_card.add(this.#b2);
                 })
                 clearInterval(int1);
             }
@@ -97,8 +114,6 @@ class SettingsGoogleCheckPage extends Page {
             direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.NOWRAP,
             align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.CENTER
         });
-        let label1 = new Label({markdownText: "Установите ключи для доступа к таблицам"});
-        block2.add(label1);
         let i1 = new TextInput({title: 'Идентификатор таблицы: "Группы пользователей"', placeholder: 'Группы пользователей', width: '400px'});
         let i2 = new TextInput({title: 'Идентификатор таблицы: "Настройки авторизации"', placeholder: 'Настройки авторизации', width: '400px'});
         let i3 = new TextInput({title: 'Идентификатор таблицы: "Сервисы и продакты"', placeholder: 'Сервисы и продакты', width: '400px'});
@@ -127,7 +142,7 @@ class SettingsGoogleCheckPage extends Page {
             direction: Styles.DIRECTION.ROW, wrap: Styles.WRAP.WRAP,
             align: Styles.ALIGN.CENTER, justify: Styles.JUSTIFY.SPACE_BEETWEEN
         });
-        block.setWidth("47%");
+        block.setWidth("100%");
         block.setHeight("50px")
         block.add(new Label({
             markdownText: text, wordBreak: Styles.WORD_BREAK.BREAK_ALL
