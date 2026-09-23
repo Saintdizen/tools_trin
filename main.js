@@ -5,9 +5,9 @@ const json = require('./package.json');
 let main = new Main({
     name: `${json.productName} (${json.version})`,
     sizes: {
-        width: 950,
+        width: 900,
         height: 700,
-        minWidth: 800,
+        minWidth: 900,
         minHeight: 700
     },
     render: `${__dirname}/app/app.js`,
