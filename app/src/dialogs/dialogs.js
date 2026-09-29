@@ -169,62 +169,49 @@ let data = {
             text: "**Дождаться появления уведомлений**.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
-                path: `${__dirname}/../../../resources/images/create_chat/1_2.png`
+                path: `${__dirname}/../../../resources/images/create_chat/1_1.png`
             }
         },
         {
-            image: {
-                width: Styles.SIZE.MAX_CONTENT,
-                path: `${__dirname}/../../../resources/images/create_chat/1_3.png`
-            }
-        },
-        {
-            text: "2. Заполнить поле: **Номер инцидента**.",
+            text: "2. Заполнить поля: **Номер инцидента** и **Описание инцидента**.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
                 path: `${__dirname}/../../../resources/images/create_chat/2.png`
             }
         },
         {
-            text: "3. Заполнить поле: **Описание инцидента**.",
+            text: "3. Заполнить поле: **Закрепленное сообщение** при необходимости.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
                 path: `${__dirname}/../../../resources/images/create_chat/3.png`
             }
         },
         {
-            text: "4. Заполнить поле: **Закрепленное сообщение** при необходимости.",
+            text: "4. Нажать кнопку: **Создать чат**.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
                 path: `${__dirname}/../../../resources/images/create_chat/4.png`
             }
         },
         {
-            text: "5. Нажать кнопку: **Создать чат**.",
+            text: "**Подтвердить создание чата**.",
+            image: {
+                width: Styles.SIZE.MAX_CONTENT,
+                path: `${__dirname}/../../../resources/images/create_chat/4_1.png`
+            }
+        },
+        {
+            text: "5. Дождаться заполнения **прогресс бара** и появления сообщения: **Чат успешно создан!**.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
                 path: `${__dirname}/../../../resources/images/create_chat/5.png`
             }
         },
         {
-            text: "**Подтвердить создание чата**.",
-            image: {
-                width: Styles.SIZE.MAX_CONTENT,
-                path: `${__dirname}/../../../resources/images/create_chat/5_1.png`
-            }
-        },
-        {
-            text: "6. Дождаться заполнения **прогресс бара** и появления сообщения: **Чат успешно создан!**.",
+            text: "6. Нажать кнопку: **Закрыть** и проверить создание чата в **Telegram**.",
             image: {
                 width: Styles.SIZE.MAX_CONTENT,
                 path: `${__dirname}/../../../resources/images/create_chat/6.png`
-            }
-        },
-        {
-            text: "7. Нажать кнопку: **Закрыть** и проверить создание чата в **Telegram**.",
-            image: {
-                width: Styles.SIZE.MAX_CONTENT,
-                path: `${__dirname}/../../../resources/images/create_chat/7.png`
             }
         }
     ]
@@ -242,6 +229,7 @@ class Data {
         for (let block of this.#data) {
             let text = block.text;
             let image = block.image;
+
             if (text !== undefined) contents.push(new Label({
                 markdownText: text,
                 wordBreak: "break-word",

@@ -1,4 +1,4 @@
-const {AppLayout, render, ipcRenderer, Route, Log, Popup, shell, path, App} = require('chuijs');
+const {AppLayout, render, ipcRenderer, Route, Log, Popup, shell, path, Desktop} = require('chuijs');
 const {SettingsGoogleCheckPage} = require("./pages/0_page");
 const {SettingsMain} = require("./pages/settings/settings_main");
 const {CreateChatTG} = require("./pages/1_page");
@@ -17,8 +17,8 @@ class Apps extends AppLayout {
         ipcRenderer.on("sendUserData", (e, user) => {
             this.addToHeaderRight([
                 AppLayout.USER_PROFILE({
-                    username: `${user.firstName} ${user.lastName}`,
-                    image: {noImage: true},
+                    username: this.setName(user.firstName, user.lastName),
+                    //image: {noImage: true},
                     items: [
                         AppLayout.USER_PROFILE_ITEM({
                             title: "Настройки",
@@ -27,9 +27,9 @@ class Apps extends AppLayout {
                         AppLayout.USER_PROFILE_ITEM({
                             title: "Логи",
                             clickEvent: () => {
-                                let pathz = path.join(App.userDataPath(), 'logs')
-                                Log.info(pathz)
-                                shell.openPath(pathz)
+                                const logs_path = path.join(String(Desktop.app.path("userData")), 'logs')
+                                Log.info(logs_path)
+                                shell.openPath(logs_path)
                             }
                         }),
                         AppLayout.USER_PROFILE_ITEM({
@@ -47,6 +47,13 @@ class Apps extends AppLayout {
                 })
             ])
         })
+    }
+
+    setName(firstName, lastName) {
+        let nickname = ''
+        if (firstName) nickname += firstName
+        if (lastName) nickname += ` ${lastName}`
+        return nickname
     }
 }
 

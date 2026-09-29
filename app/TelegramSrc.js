@@ -1,4 +1,4 @@
-const {store, Log, path, fs, App, request, os} = require('chuijs');
+const {store, Log, path, fs, Desktop, request, os} = require('chuijs');
 const {TelegramClient, Api} = require("telegram");
 const {transliterate} = require("transliteration");
 const {StringSession} = require("telegram/sessions");
@@ -12,7 +12,7 @@ class TelegramSrc {
     #mainApp = undefined;
     #client = undefined;
     #username_new = os.userInfo().username.replaceAll(new RegExp("[^a-zA-Zа-яА-Я\\s\\d]", 'g'), '').trim().replaceAll(" ", '_');
-    #sessionPath = path.join(App.userDataPath(), 'sessions_tools_trin');
+    #sessionPath = path.join(String(Desktop.app.path("userData")), 'sessions_tools_trin');
     #sessionFile = `${transliterate(this.#username_new).toLowerCase()}.json`;
     #fullSessionPath = path.join(this.#sessionPath, this.#sessionFile);
     #stringSession = new StringSession("");

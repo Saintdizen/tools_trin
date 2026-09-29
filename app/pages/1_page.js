@@ -2,7 +2,7 @@ const {
     Page, Button, TextInput, ContentBlock,
     Styles, Notification, ipcRenderer, Dialog,
     ProgressBar, Label, Spinner,
-    TextEditor, MenuBar, Icons, Log, Popup, ComboBox, MultiComboBox, Card
+    TextEditor, MenuBar, Icons, Log, Popup, MultiComboBox, Card
 } = require('chuijs');
 const {CreateHelpDialog} = require("../src/dialogs/dialogs");
 const {Tables} = require('../src/google_sheets/tables');
@@ -31,13 +31,6 @@ class CreateChatTG extends Page {
     #help_create_dialog = new CreateHelpDialog();
     #menuBar = new MenuBar({test: true});
     #comboBox_services_Options = []
-
-    #main_card = new ContentBlock({
-        direction: Styles.DIRECTION.COLUMN,
-        wrap: Styles.WRAP.NOWRAP,
-        align: Styles.ALIGN.CENTER,
-        justify: Styles.JUSTIFY.CENTER
-    });
     #card1 = new Card({
         id: 'card1',
         title: 'Системы',
@@ -69,7 +62,6 @@ class CreateChatTG extends Page {
         this.setMain(true);
         this.setFullWidth();
         this.setFullHeight();
-        this.disablePadding();
         this.#enableLogsNotification();
         this.add(this.#help_create_dialog)
         this.#menuBar = new MenuBar({test: true});
