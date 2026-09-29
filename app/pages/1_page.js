@@ -65,7 +65,7 @@ class CreateChatTG extends Page {
         //
         setStyles(__dirname + "/card.css", "card_styles");
         // Настройки страницы
-        this.setTitle('Tools Trin: Создание чата в Telegram');
+        // this.setTitle('Tools Trin: Создание чата в Telegram');
         this.setMain(true);
         this.setFullWidth();
         this.setFullHeight();

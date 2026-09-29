@@ -1,14 +1,14 @@
 const {
     Page, Button, Label, fs, store, shell, App, path, TextInput,
-    Route, ipcRenderer, Badge, Log, ContentBlock, Styles, Spinner, Icons, Card
+    Route, ipcRenderer, Badge, Log, ContentBlock, Styles, Spinner, Icons, Card, Desktop
 } = require('chuijs');
 const {SettingsStoreMarks} = require("../settings/settings_store_marks");
 const {AuthMain} = require("./auth/auth");
 const {Tables} = require('../src/google_sheets/tables');
 
 class SettingsGoogleCheckPage extends Page {
-    #path_folder = path.join(App.userDataPath(), "google");
-    #path_key = path.join(this.#path_folder, "credentials.json");
+    #path_folder = undefined;
+    #path_key = undefined;
     #p1 = undefined;
     #main_block = new ContentBlock({
         direction: Styles.DIRECTION.COLUMN, wrap: Styles.WRAP.NOWRAP,
@@ -28,6 +28,7 @@ class SettingsGoogleCheckPage extends Page {
     #b2 = undefined;
     constructor(MainPage) {
         super();
+        //
         this.#p1 = MainPage;
         this.#main_block.setWidth(Styles.SIZE.WEBKIT_FILL);
         this.#main_block.setHeight(Styles.SIZE.WEBKIT_FILL);
@@ -38,7 +39,15 @@ class SettingsGoogleCheckPage extends Page {
         this.add(this.#main_block);
         this.#main_block.add(this.#card)
         this.#card.add(this.#block_for_card)
-        if (!fs.existsSync(this.#path_folder)) fs.mkdirSync(this.#path_folder);
+
+        setTimeout(async () => {
+            const paths = await Desktop.app.path("userData")
+            console.log(paths)
+            this.#path_folder = path.join(String(paths),  "google");
+            this.#path_key = path.join(String(this.#path_folder), "credentials.json");
+            if (!fs.existsSync(this.#path_folder)) fs.mkdirSync(this.#path_folder);
+        }, 1)
+
         let key = store.get(SettingsStoreMarks.SETTINGS.google.json_key_path) === undefined;
         let t1 = store.get(SettingsStoreMarks.SETTINGS.google.tables.users_groups_id) === undefined;
         let t2 = store.get(SettingsStoreMarks.SETTINGS.google.tables.auth_settings_id) === undefined;
@@ -125,9 +134,9 @@ class SettingsGoogleCheckPage extends Page {
                 store.set(SettingsStoreMarks.SETTINGS.google.tables.users_groups_id, i1.getValue());
                 store.set(SettingsStoreMarks.SETTINGS.google.tables.auth_settings_id, i2.getValue());
                 store.set(SettingsStoreMarks.SETTINGS.google.tables.services_and_production, i3.getValue());
-                let apps = App.get();
-                apps.relaunch()
-                apps.exit(0)
+                // let apps = Desktop.;
+                // apps.relaunch()
+                // apps.exit(0)
             }
             if (i1.getValue() === "") i1.setErrorMessage("Устанвите идентификатор таблицы");
             if (i2.getValue() === "") i2.setErrorMessage("Устанвите идентификатор таблицы");
